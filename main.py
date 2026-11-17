@@ -1,10 +1,14 @@
 import sys
+import os
+
+os.environ.setdefault("QT_IM_MODULE", "QtVirtualKeyboard")
 
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtWebEngineQuick import QtWebEngineQuick
 
 from src.inactivity_controller import InactivityController
+from src.network_controller import NetworkController
 from src.task_model import CompletionHistoryModel, TaskModel
 
 
@@ -16,6 +20,7 @@ def main():
 
     history_model = CompletionHistoryModel()
     task_model = TaskModel(history_model)
+    network_controller = NetworkController()
     inactivity_controller = InactivityController(timeout_seconds=30)
     app.installEventFilter(inactivity_controller)
 
@@ -30,6 +35,10 @@ def main():
     engine.rootContext().setContextProperty(
         "inactivityController",
         inactivity_controller
+    )
+    engine.rootContext().setContextProperty(
+        "networkController",
+        network_controller
     )
 
     engine.load("qml/Main.qml")

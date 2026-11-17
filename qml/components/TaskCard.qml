@@ -2,6 +2,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "."
+import ".." as AppTheme
 
 Rectangle {
     id: root
@@ -12,8 +13,8 @@ Rectangle {
     property string taskIcon: "💧"
 
     // Appearance
-    property color backgroundColor: "#FBE3D5"
-    property color accentColor: "#C47C58"
+    property color backgroundColor: AppTheme.Theme.taskPeach
+    property color accentColor: AppTheme.Theme.accentPeach
 
     // Task metadata
     property string durationOnBoard: "2h 15m"
@@ -27,8 +28,9 @@ Rectangle {
     implicitWidth: 350
     implicitHeight: 145
 
-    radius: 20
+    radius: AppTheme.Theme.radiusLarge
     color: root.backgroundColor
+    layer.enabled: true
 
     border.width: 1
     border.color: Qt.darker(backgroundColor, 1.08)
@@ -47,7 +49,7 @@ Rectangle {
             Layout.preferredWidth: 58
             Layout.preferredHeight: 58
             radius: 18
-            color: "#FFFFFF"
+            color: AppTheme.Theme.surface
             opacity: 0.8
 
             Text {
@@ -65,7 +67,7 @@ Rectangle {
             Text {
                 Layout.fillWidth: true
                 text: root.title
-                color: "#493D5C"
+                color: AppTheme.Theme.textPrimary
                 font.pixelSize: 17
                 font.weight: Font.Bold
                 elide: Text.ElideRight
@@ -74,7 +76,7 @@ Rectangle {
             Text {
                 Layout.fillWidth: true
                 text: root.description
-                color: "#756A83"
+                color: AppTheme.Theme.textSecondary
                 font.pixelSize: 11
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
@@ -87,23 +89,23 @@ Rectangle {
                 InfoPill {
                     icon: "◷"
                     text: root.durationOnBoard
-                    accentColor: "#75618F"
-                    backgroundColor: "#FFFFFF"
+                    accentColor: AppTheme.Theme.accent
+                    backgroundColor: AppTheme.Theme.surface
                 }
 
                 InfoPill {
                     text: root.impact + " impact"
                     accentColor: root.impact === "High"
-                                ? "#B84E65"
+                                ? AppTheme.Theme.impactHigh
                                 : root.impact === "Medium"
-                                  ? "#477A60"
-                                  : "#92743A"
+                                  ? AppTheme.Theme.impactMedium
+                                  : AppTheme.Theme.impactLow
 
                     backgroundColor: root.impact === "High"
-                                     ? "#F9DCE3"
+                                     ? AppTheme.Theme.impactHighSurface
                                      : root.impact === "Medium"
-                                       ? "#DCEFE5"
-                                       : "#F9EDC9"
+                                       ? AppTheme.Theme.taskMint
+                                       : AppTheme.Theme.impactLowSurface
                 }
             }
         }
@@ -114,10 +116,10 @@ Rectangle {
             boxSize: 32
             cornerRadius: 10
 
-            checkedColor: "#A98BD4"
-            uncheckedColor: "#FFFFFF"
-            borderColor: "#B7A9C7"
-            checkColor: "#FFFFFF"
+            checkedColor: AppTheme.Theme.accentLight
+            uncheckedColor: AppTheme.Theme.surface
+            borderColor: AppTheme.Theme.checkboxBorder
+            checkColor: AppTheme.Theme.surface
 
             onToggled: function(isChecked) {
                 root.completed = isChecked

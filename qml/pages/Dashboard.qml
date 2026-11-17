@@ -2,9 +2,18 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "../components"
+import ".." as AppTheme
 
 Item {
     id: root
+
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0; color: AppTheme.Theme.canvas }
+            GradientStop { position: 1; color: AppTheme.Theme.canvasAlt }
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -21,13 +30,13 @@ Item {
                     text: "Today's Tasks"
                     font.pixelSize: 28
                     font.bold: true
-                    color: "#493D5C"
+                    color: AppTheme.Theme.textPrimary
                 }
 
                 Text {
                     text: "Small steps. Big difference."
                     font.pixelSize: 14
-                    color: "#756A83"
+                    color: AppTheme.Theme.textSecondary
                 }
             }
 
@@ -39,7 +48,7 @@ Item {
             Layout.preferredWidth: 84
             Layout.preferredHeight: 38
             radius: 19
-            color: "#A98BD4"
+            color: AppTheme.Theme.accentLight
 
             Text {
                 anchors.centerIn: parent
@@ -59,9 +68,9 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: 82
             radius: 18
-            color: "#FFFFFF"
+            color: AppTheme.Theme.surface
             border.width: 1
-            border.color: "#E7E1EB"
+            border.color: AppTheme.Theme.divider
 
             ColumnLayout {
             anchors.fill: parent
@@ -75,7 +84,7 @@ Item {
 
                 Text {
                     text: taskModel.completedCount + " of " + taskModel.count + " complete"
-                    color: "#493D5C"
+                    color: AppTheme.Theme.textPrimary
                     font.pixelSize: 14
                     font.weight: Font.DemiBold
                 }
@@ -84,7 +93,7 @@ Item {
 
                 Text {
                     text: taskModel.progress + "%"
-                    color: "#75618F"
+                    color: AppTheme.Theme.accent
                     font.pixelSize: 14
                     font.bold: true
                 }
@@ -94,13 +103,13 @@ Item {
                 Layout.fillWidth: true
                 height: 8
                 radius: 4
-                color: "#EEE8F3"
+                color: AppTheme.Theme.progressTrack
 
                 Rectangle {
                     width: parent.width * taskModel.progress / 100
                     height: parent.height
                     radius: parent.radius
-                    color: "#A98BD4"
+                    color: AppTheme.Theme.accentLight
 
                     Behavior on width {
                         NumberAnimation { duration: 180 }
@@ -192,7 +201,7 @@ Item {
                     titleField.text,
                     descriptionField.text,
                     "Anytime",
-                    "#DCEFE5",
+                    AppTheme.Theme.taskMint,
                     impactField.currentText,
                     "🌿")) {
                 titleField.text = ""

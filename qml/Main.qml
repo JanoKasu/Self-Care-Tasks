@@ -2,6 +2,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "." as AppTheme
 
 import "pages"
 
@@ -15,7 +16,7 @@ ApplicationWindow {
     minimumHeight: 420
 
     title: "Self Care Dashboard"
-    color: "#F5F0FA"
+    color: AppTheme.Theme.canvas
 
     ColumnLayout {
         anchors.fill: parent
@@ -26,40 +27,90 @@ ApplicationWindow {
             id: navigation
 
             Layout.fillWidth: true
-            Layout.preferredHeight: 54
+            Layout.preferredHeight: 68
+            padding: 8
 
             background: Rectangle {
-                color: "#FFFFFF"
+                color: AppTheme.Theme.surface
 
                 Rectangle {
                     anchors.bottom: parent.bottom
                     width: parent.width
-                    height: 3
-                    color: "#E7E1EB"
-                }
-
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    width: navigation.width / 4
-                    height: 3
-                    x: navigation.currentIndex * width
-                    color: "#A98BD4"
-
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 180
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+                    height: 1
+                    color: AppTheme.Theme.divider
                 }
             }
 
             TabButton {
+                id: homeTab
+                text: "Home"
+                font.pixelSize: AppTheme.Theme.fontBody
+                font.weight: checked ? Font.DemiBold : Font.Normal
+
+                background: Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 7
+                    radius: AppTheme.Theme.radiusMedium
+                    color: homeTab.checked ? AppTheme.Theme.accent : "transparent"
+
+                    Behavior on color { ColorAnimation { duration: 180 } }
+                }
+
+                contentItem: Text {
+                    text: homeTab.text
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: homeTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                    font: homeTab.font
+                }
+            }
+
+            TabButton {
+                id: dashboardTab
                 text: "Dashboard"
+                font.pixelSize: AppTheme.Theme.fontBody
+                font.weight: checked ? Font.DemiBold : Font.Normal
+
+                background: Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 7
+                    radius: AppTheme.Theme.radiusMedium
+                    color: dashboardTab.checked ? AppTheme.Theme.accent : "transparent"
+
+                    Behavior on color { ColorAnimation { duration: 180 } }
+                }
+
+                contentItem: Text {
+                    text: dashboardTab.text
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: dashboardTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                    font: dashboardTab.font
+                }
             }
 
             TabButton {
+                id: routinesTab
                 text: "Routines"
+                font.pixelSize: AppTheme.Theme.fontBody
+                font.weight: checked ? Font.DemiBold : Font.Normal
+
+                background: Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 7
+                    radius: AppTheme.Theme.radiusMedium
+                    color: routinesTab.checked ? AppTheme.Theme.accent : "transparent"
+
+                    Behavior on color { ColorAnimation { duration: 180 } }
+                }
+
+                contentItem: Text {
+                    text: routinesTab.text
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: routinesTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                    font: routinesTab.font
+                }
             }
         }
 
@@ -73,6 +124,7 @@ ApplicationWindow {
 
             currentIndex: navigation.currentIndex
 
+            Landing {}
             Dashboard {}
             Routines {}
         }

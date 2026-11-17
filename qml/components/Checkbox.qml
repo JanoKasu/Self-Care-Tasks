@@ -1,15 +1,16 @@
 
 import QtQuick
+import ".." as AppTheme
 
 Item {
     id: root
 
     // Public properties
     property bool checked: false
-    property color checkedColor: "#75618F"
-    property color uncheckedColor: "#FFFFFF"
-    property color borderColor: "#B7A9C7"
-    property color checkColor: "#FFFFFF"
+    property color checkedColor: AppTheme.Theme.accent
+    property color uncheckedColor: AppTheme.Theme.surface
+    property color borderColor: AppTheme.Theme.checkboxBorder
+    property color checkColor: AppTheme.Theme.surface
 
     property int boxSize: 27
     property int cornerRadius: 9

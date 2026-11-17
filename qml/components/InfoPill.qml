@@ -1,14 +1,14 @@
 
 import QtQuick
-import QtQuick.Controls
+import ".." as AppTheme
 
 Rectangle {
     id: root
 
     property string text: "2 hours"
     property string icon: ""
-    property color accentColor: "#75618F"
-    property color backgroundColor: "#E9DDF8"
+    property color accentColor: AppTheme.Theme.accent
+    property color backgroundColor: AppTheme.Theme.canvasAlt
 
     implicitWidth: content.implicitWidth + 24
     implicitHeight: 32

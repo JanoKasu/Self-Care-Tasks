@@ -1,19 +1,33 @@
 import sys
-from pathlib import Path
 
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
+from src.task_model import TaskModel
+
+
 def main():
     app = QGuiApplication(sys.argv)
+
     engine = QQmlApplicationEngine()
-    qml_file = Path(__file__).parent / "qml" / "Main.qml"
-    engine.load(str(qml_file))
+
+    task_model = TaskModel()
+
+    print("Tasks loaded:", task_model.rowCount())
+    print("Task data:", task_model.tasks)
+
+    engine.rootContext().setContextProperty(
+        "taskModel",
+        task_model
+    )
+
+    engine.load("qml/Main.qml")
 
     if not engine.rootObjects():
         return -1
 
     return app.exec()
+
 
 if __name__ == "__main__":
     sys.exit(main())

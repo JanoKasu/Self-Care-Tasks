@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+.venv/
+venv/
+env/
+ENV/
+. Python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE and OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Qt / QML generated files
+*.qmlc
+*.jsc
+qmlcache_loader.cpp
+*.qmltypes
+*_qml.cpp
+*_quick.cpp
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+token.json
+client_secret*.json
+service-account*.json
+google-credentials*.json
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak

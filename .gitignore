@@ -51,3 +51,6 @@ google-credentials*.json
 *.log
 *.tmp
 *.bak
+
+# Specific Files
+data/

@@ -4,7 +4,8 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtWebEngineQuick import QtWebEngineQuick
 
-from src.task_model import TaskModel
+from src.inactivity_controller import InactivityController
+from src.task_model import CompletionHistoryModel, TaskModel
 
 
 def main():
@@ -13,11 +14,22 @@ def main():
 
     engine = QQmlApplicationEngine()
 
-    task_model = TaskModel()
+    history_model = CompletionHistoryModel()
+    task_model = TaskModel(history_model)
+    inactivity_controller = InactivityController(timeout_seconds=30)
+    app.installEventFilter(inactivity_controller)
 
     engine.rootContext().setContextProperty(
         "taskModel",
         task_model
+    )
+    engine.rootContext().setContextProperty(
+        "historyModel",
+        history_model
+    )
+    engine.rootContext().setContextProperty(
+        "inactivityController",
+        inactivity_controller
     )
 
     engine.load("qml/Main.qml")

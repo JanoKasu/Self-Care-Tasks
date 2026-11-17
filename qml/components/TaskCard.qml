@@ -17,8 +17,10 @@ Rectangle {
     property color accentColor: AppTheme.Theme.accentPeach
 
     // Task metadata
-    property string durationOnBoard: "2h 15m"
+    property string createdAt: ""
+    property string durationOnBoard: "0m"
     property string impact: "High"
+    property date boardTime: new Date()
 
     // Completion state
     property bool completed: false
@@ -34,6 +36,39 @@ Rectangle {
 
     border.width: 1
     border.color: Qt.darker(backgroundColor, 1.08)
+
+    function refreshDuration() {
+        if (!createdAt)
+            return
+
+        var created = new Date(createdAt)
+        if (isNaN(created.getTime()))
+            return
+
+        var elapsedMinutes = Math.floor(
+            Math.max(0, boardTime.getTime() - created.getTime()) / 60000
+        )
+        if (elapsedMinutes < 60) {
+            durationOnBoard = elapsedMinutes + "m"
+            return
+        }
+
+        var hours = Math.floor(elapsedMinutes / 60)
+        var minutes = elapsedMinutes % 60
+        durationOnBoard = hours + "h " + minutes + "m"
+    }
+
+    onCreatedAtChanged: refreshDuration()
+
+    Timer {
+        interval: 60000
+        running: true
+        repeat: true
+        onTriggered: {
+            boardTime = new Date()
+            root.refreshDuration()
+        }
+    }
 
     Behavior on color {
         ColorAnimation { duration: 180 }

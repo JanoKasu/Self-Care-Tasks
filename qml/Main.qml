@@ -25,10 +25,15 @@ ApplicationWindow {
         // Navigation bar
         TabBar {
             id: navigation
+            objectName: "navigation"
 
             Layout.fillWidth: true
-            Layout.preferredHeight: 68
-            padding: 8
+            Layout.preferredHeight: 72
+            leftPadding: 16
+            rightPadding: 16
+            topPadding: 10
+            bottomPadding: 10
+            spacing: 6
 
             background: Rectangle {
                 color: AppTheme.Theme.surface
@@ -49,11 +54,13 @@ ApplicationWindow {
 
                 background: Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 7
-                    radius: AppTheme.Theme.radiusMedium
+                    radius: 14
                     color: homeTab.checked ? AppTheme.Theme.accent : "transparent"
+                    border.width: homeTab.checked ? 0 : 1
+                    border.color: "transparent"
 
                     Behavior on color { ColorAnimation { duration: 180 } }
+                    Behavior on border.color { ColorAnimation { duration: 180 } }
                 }
 
                 contentItem: Text {
@@ -73,8 +80,7 @@ ApplicationWindow {
 
                 background: Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 7
-                    radius: AppTheme.Theme.radiusMedium
+                    radius: 14
                     color: dashboardTab.checked ? AppTheme.Theme.accent : "transparent"
 
                     Behavior on color { ColorAnimation { duration: 180 } }
@@ -97,8 +103,7 @@ ApplicationWindow {
 
                 background: Rectangle {
                     anchors.fill: parent
-                    anchors.margins: 7
-                    radius: AppTheme.Theme.radiusMedium
+                    radius: 14
                     color: routinesTab.checked ? AppTheme.Theme.accent : "transparent"
 
                     Behavior on color { ColorAnimation { duration: 180 } }
@@ -112,12 +117,36 @@ ApplicationWindow {
                     font: routinesTab.font
                 }
             }
+
+            TabButton {
+                id: historyTab
+                text: "History"
+                font.pixelSize: AppTheme.Theme.fontBody
+                font.weight: checked ? Font.DemiBold : Font.Normal
+
+                background: Rectangle {
+                    anchors.fill: parent
+                    radius: 14
+                    color: historyTab.checked ? AppTheme.Theme.accent : "transparent"
+
+                    Behavior on color { ColorAnimation { duration: 180 } }
+                }
+
+                contentItem: Text {
+                    text: historyTab.text
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: historyTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                    font: historyTab.font
+                }
+            }
         }
 
 
         // Page container
         StackLayout {
             id: pageStack
+            objectName: "pageStack"
 
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -127,6 +156,7 @@ ApplicationWindow {
             Landing {}
             Dashboard {}
             Routines {}
+            History {}
         }
     }
 }

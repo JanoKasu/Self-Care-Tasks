@@ -148,6 +148,7 @@ Item {
                         impact: model.impact
                         backgroundColor: model.backgroundColor
                         completed: model.completed
+                        createdAt: model.createdAt
 
                         Layout.fillWidth: true
                         Layout.preferredHeight: 145

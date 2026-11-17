@@ -13,6 +13,71 @@ from PySide6.QtCore import (
 from src.database import Database
 
 
+class CompletionHistoryModel(QAbstractListModel):
+    countChanged = Signal()
+
+    TaskIdRole = Qt.ItemDataRole.UserRole + 1
+    TitleRole = TaskIdRole + 1
+    DescriptionRole = TitleRole + 1
+    CategoryRole = DescriptionRole + 1
+    BackgroundColorRole = CategoryRole + 1
+    ImpactRole = BackgroundColorRole + 1
+    IconRole = ImpactRole + 1
+    CompletionCountRole = IconRole + 1
+    LastCompletedAtRole = CompletionCountRole + 1
+
+    def __init__(self):
+        super().__init__()
+        self.database = Database()
+        self.entries = self.database.get_completion_history()
+
+    def roleNames(self):
+        return {
+            self.TaskIdRole: b"taskId",
+            self.TitleRole: b"title",
+            self.DescriptionRole: b"description",
+            self.CategoryRole: b"category",
+            self.BackgroundColorRole: b"backgroundColor",
+            self.ImpactRole: b"impact",
+            self.IconRole: b"taskIcon",
+            self.CompletionCountRole: b"completionCount",
+            self.LastCompletedAtRole: b"lastCompletedAt",
+        }
+
+    def rowCount(self, parent=QModelIndex()):
+        if parent.isValid():
+            return 0
+        return len(self.entries)
+
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if not index.isValid() or not 0 <= index.row() < len(self.entries):
+            return None
+
+        entry = self.entries[index.row()]
+        roles = {
+            self.TaskIdRole: entry["task_id"],
+            self.TitleRole: entry["title"],
+            self.DescriptionRole: entry["description"],
+            self.CategoryRole: entry["category"],
+            self.BackgroundColorRole: entry["background_color"],
+            self.ImpactRole: entry["impact"],
+            self.IconRole: entry["icon"],
+            self.CompletionCountRole: entry["completion_count"],
+            self.LastCompletedAtRole: entry["last_completed_at"],
+        }
+        return roles.get(role)
+
+    @Property(int, notify=countChanged)
+    def count(self):
+        return len(self.entries)
+
+    def refresh(self):
+        self.beginResetModel()
+        self.entries = self.database.get_completion_history()
+        self.endResetModel()
+        self.countChanged.emit()
+
+
 class TaskModel(QAbstractListModel):
     countChanged = Signal()
     completedCountChanged = Signal()
@@ -28,11 +93,12 @@ class TaskModel(QAbstractListModel):
     CreatedAtRole = IdRole + 7
     CompletedRole = IdRole + 8
 
-    def __init__(self):
+    def __init__(self, history_model=None):
         super().__init__()
 
         self.database = Database()
         self.tasks = self.database.get_tasks()
+        self.history_model = history_model
 
     # Expose database fields to QML
     def roleNames(self):
@@ -118,11 +184,14 @@ class TaskModel(QAbstractListModel):
     def setCompleted(self, task_id, completed):
         for row, task in enumerate(self.tasks):
             if task["id"] == task_id:
-                return self.setData(
+                updated = self.setData(
                     self.index(row, 0),
                     completed,
                     self.CompletedRole
                 )
+                if updated and completed and self.history_model is not None:
+                    self.history_model.refresh()
+                return updated
 
         return False
 

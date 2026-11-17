@@ -11,7 +11,6 @@ Item {
         anchors.margins: 24
         spacing: 18
 
-        // Header
         RowLayout {
             Layout.fillWidth: true
 
@@ -36,14 +35,81 @@ Item {
                 Layout.fillWidth: true
             }
 
+            Rectangle {
+            Layout.preferredWidth: 84
+            Layout.preferredHeight: 38
+            radius: 19
+            color: "#A98BD4"
+
             Text {
-                text: taskModel.count + " tasks"
-                color: "#756A83"
-                font.pixelSize: 14
+                anchors.centerIn: parent
+                text: "+ Add task"
+                color: "white"
+                font.pixelSize: 13
+                font.weight: Font.DemiBold
+            }
+
+            TapHandler {
+                onTapped: addTaskDialog.open()
+            }
             }
         }
 
-        // Task list
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 82
+            radius: 18
+            color: "#FFFFFF"
+            border.width: 1
+            border.color: "#E7E1EB"
+
+            ColumnLayout {
+            anchors.fill: parent
+            anchors.leftMargin: 18
+            anchors.rightMargin: 18
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 8
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Text {
+                    text: taskModel.completedCount + " of " + taskModel.count + " complete"
+                    color: "#493D5C"
+                    font.pixelSize: 14
+                    font.weight: Font.DemiBold
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Text {
+                    text: taskModel.progress + "%"
+                    color: "#75618F"
+                    font.pixelSize: 14
+                    font.bold: true
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                height: 8
+                radius: 4
+                color: "#EEE8F3"
+
+                Rectangle {
+                    width: parent.width * taskModel.progress / 100
+                    height: parent.height
+                    radius: parent.radius
+                    color: "#A98BD4"
+
+                    Behavior on width {
+                        NumberAnimation { duration: 180 }
+                    }
+                }
+            }
+            }
+        }
+
         ScrollView {
             id: taskScrollView
 
@@ -77,7 +143,6 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 145
 
-                        // Save checkbox changes to SQLite
                         onCompletionRequested: function(isCompleted) {
                             taskModel.setCompleted(
                                 model.taskId,
@@ -86,6 +151,53 @@ Item {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    Dialog {
+        id: addTaskDialog
+        anchors.centerIn: parent
+        modal: true
+        title: "Add a self-care task"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: Math.min(root.width - 48, 420)
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 12
+
+            TextField {
+                id: titleField
+                Layout.fillWidth: true
+                placeholderText: "Task name"
+            }
+
+            TextField {
+                id: descriptionField
+                Layout.fillWidth: true
+                placeholderText: "Short description"
+            }
+
+            ComboBox {
+                id: impactField
+                Layout.fillWidth: true
+                model: ["Low", "Medium", "High"]
+            }
+        }
+
+        onOpened: titleField.forceActiveFocus()
+        onAccepted: {
+            if (taskModel.addTask(
+                    titleField.text,
+                    descriptionField.text,
+                    "Anytime",
+                    "#DCEFE5",
+                    impactField.currentText,
+                    "🌿")) {
+                titleField.text = ""
+                descriptionField.text = ""
+                impactField.currentIndex = 1
             }
         }
     }

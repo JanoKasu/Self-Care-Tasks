@@ -13,9 +13,6 @@ def main():
 
     task_model = TaskModel()
 
-    print("Tasks loaded:", task_model.rowCount())
-    print("Task data:", task_model.tasks)
-
     engine.rootContext().setContextProperty(
         "taskModel",
         task_model

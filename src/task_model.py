@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from PySide6.QtCore import (
     QAbstractListModel,
     QModelIndex,
+    Property,
+    Signal,
     Qt,
     Slot,
 )
@@ -12,6 +14,9 @@ from src.database import Database
 
 
 class TaskModel(QAbstractListModel):
+    countChanged = Signal()
+    completedCountChanged = Signal()
+    progressChanged = Signal()
 
     IdRole = Qt.ItemDataRole.UserRole + 1
     TitleRole = IdRole + 1
@@ -28,9 +33,6 @@ class TaskModel(QAbstractListModel):
 
         self.database = Database()
         self.tasks = self.database.get_tasks()
-
-        if not self.tasks:
-            self._create_sample_tasks()
 
     # Expose database fields to QML
     def roleNames(self):
@@ -106,6 +108,8 @@ class TaskModel(QAbstractListModel):
             index,
             [self.CompletedRole]
         )
+        self.completedCountChanged.emit()
+        self.progressChanged.emit()
 
         return True
 
@@ -122,6 +126,71 @@ class TaskModel(QAbstractListModel):
 
         return False
 
+    @Property(int, notify=countChanged)
+    def count(self):
+        return len(self.tasks)
+
+    @Property(int, notify=completedCountChanged)
+    def completedCount(self):
+        return sum(1 for task in self.tasks if task["completed"])
+
+    @Property(int, notify=progressChanged)
+    def progress(self):
+        if not self.tasks:
+            return 0
+
+        return round(self.completedCount * 100 / len(self.tasks))
+
+    @Slot(str, str, str, str, str, str)
+    def addTask(self, title, description, category,
+                background_color, impact, icon):
+        title = title.strip()
+        if not title:
+            return False
+
+        now = datetime.now(timezone.utc).isoformat()
+        task_id = self.database.add_task(
+            title,
+            description.strip(),
+            category,
+            background_color,
+            impact,
+            icon,
+            now,
+        )
+
+        self.beginInsertRows(QModelIndex(), len(self.tasks), len(self.tasks))
+        self.tasks.append({
+            "id": task_id,
+            "title": title,
+            "description": description.strip(),
+            "category": category,
+            "background_color": background_color,
+            "impact": impact,
+            "icon": icon,
+            "created_at": now,
+            "completed": 0,
+        })
+        self.endInsertRows()
+        self.countChanged.emit()
+        self.progressChanged.emit()
+        return True
+
+    @Slot(int)
+    def deleteTask(self, task_id):
+        for row, task in enumerate(self.tasks):
+            if task["id"] == task_id:
+                self.beginRemoveRows(QModelIndex(), row, row)
+                self.database.delete_task(task_id)
+                del self.tasks[row]
+                self.endRemoveRows()
+                self.countChanged.emit()
+                self.completedCountChanged.emit()
+                self.progressChanged.emit()
+                return True
+
+        return False
+
     def flags(self, index):
         if not index.isValid():
             return Qt.ItemFlag.NoItemFlags
@@ -132,56 +201,6 @@ class TaskModel(QAbstractListModel):
             | Qt.ItemFlag.ItemIsEditable
         )
 
-    # Create initial tasks if the database is empty
-    def _create_sample_tasks(self):
-        now = datetime.now(timezone.utc).isoformat()
-
-        samples = [
-            {
-                "title": "Drink Water",
-                "description": "Stay hydrated throughout the day.",
-                "category": "Anytime",
-                "background_color": "#DCEFE5",
-                "impact": "High",
-                "icon": "💧",
-            },
-            {
-                "title": "Exercise",
-                "description": "Get moving, even if it's just a walk.",
-                "category": "Anytime",
-                "background_color": "#DCEFE5",
-                "impact": "Medium",
-                "icon": "🏃",
-            },
-            {
-                "title": "Read Something",
-                "description": "Feed your mind.",
-                "category": "Anytime",
-                "background_color": "#FBE3D5",
-                "impact": "Low",
-                "icon": "📖",
-            },
-            {
-                "title": "Prepare for Bed",
-                "description": "Wind down for a good night's sleep.",
-                "category": "Evening",
-                "background_color": "#F9EDC9",
-                "impact": "High",
-                "icon": "🌙",
-            },
-        ]
-
-        for task in samples:
-            self.database.add_task(
-                task["title"],
-                task["description"],
-                task["category"],
-                task["background_color"],
-                task["impact"],
-                task["icon"],
-                now,
-            )
-
-        self.beginResetModel()
-        self.tasks = self.database.get_tasks()
-        self.endResetModel()
+        self.countChanged.emit()
+        self.completedCountChanged.emit()
+        self.progressChanged.emit()

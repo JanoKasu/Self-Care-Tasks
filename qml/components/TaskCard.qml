@@ -1,6 +1,5 @@
 
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import "."
 
@@ -110,7 +109,7 @@ Rectangle {
         }
 
         Checkbox {
-            checked: true
+            checked: root.completed
 
             boxSize: 32
             cornerRadius: 10
@@ -119,6 +118,11 @@ Rectangle {
             uncheckedColor: "#FFFFFF"
             borderColor: "#B7A9C7"
             checkColor: "#FFFFFF"
+
+            onToggled: function(isChecked) {
+                root.completed = isChecked
+                root.completionRequested(isChecked)
+            }
         }
     }
 }

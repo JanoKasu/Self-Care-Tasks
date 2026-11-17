@@ -74,3 +74,10 @@ class Database:
             )
 
             return cursor.lastrowid
+
+    def delete_task(self, task_id):
+        with self.connect() as connection:
+            connection.execute(
+                "DELETE FROM tasks WHERE id = ?",
+                (task_id,)
+            )

@@ -11,6 +11,8 @@ ApplicationWindow {
     visible: true
     width: 800
     height: 480
+    minimumWidth: 520
+    minimumHeight: 420
 
     title: "Self Care Dashboard"
     color: "#F5F0FA"

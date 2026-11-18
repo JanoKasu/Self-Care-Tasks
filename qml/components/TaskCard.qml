@@ -20,6 +20,8 @@ Rectangle {
     property string createdAt: ""
     property string durationOnBoard: "0m"
     property string impact: "High"
+    property string frequency: "Daily"
+    property int points: 10
     property date boardTime: new Date()
 
     // Completion state
@@ -118,7 +120,8 @@ Rectangle {
                 elide: Text.ElideRight
             }
 
-            RowLayout {
+            Flow {
+                Layout.fillWidth: true
                 spacing: 6
 
                 InfoPill {
@@ -129,7 +132,7 @@ Rectangle {
                 }
 
                 InfoPill {
-                    text: root.impact + " impact"
+                    text: root.impact + " priority"
                     accentColor: root.impact === "High"
                                 ? AppTheme.Theme.impactHigh
                                 : root.impact === "Medium"
@@ -141,6 +144,18 @@ Rectangle {
                                      : root.impact === "Medium"
                                        ? AppTheme.Theme.taskMint
                                        : AppTheme.Theme.impactLowSurface
+                }
+
+                InfoPill {
+                    text: root.frequency
+                    accentColor: AppTheme.Theme.accent
+                    backgroundColor: AppTheme.Theme.surface
+                }
+
+                InfoPill {
+                    text: "+" + root.points + " XP"
+                    accentColor: AppTheme.Theme.accent
+                    backgroundColor: AppTheme.Theme.surface
                 }
             }
         }

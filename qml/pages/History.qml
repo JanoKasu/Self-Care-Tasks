@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import ".." as AppTheme
 
@@ -16,150 +15,196 @@ Item {
         anchors.margins: 24
         spacing: 18
 
-        RowLayout {
-            Layout.fillWidth: true
+        ColumnLayout {
+            spacing: 3
 
-            ColumnLayout {
-                spacing: 3
-
-                Text {
-                    text: "Completion History"
-                    font.pixelSize: AppTheme.Theme.fontTitle
-                    font.bold: true
-                    color: AppTheme.Theme.textPrimary
-                }
-
-                Text {
-                    text: "Task completions from the past 30 days"
-                    font.pixelSize: 14
-                    color: AppTheme.Theme.textSecondary
-                }
+            Text {
+                text: "Your Progress"
+                font.pixelSize: AppTheme.Theme.fontTitle
+                font.bold: true
+                color: AppTheme.Theme.textPrimary
             }
 
-            Item { Layout.fillWidth: true }
-
-            Rectangle {
-                Layout.preferredWidth: 112
-                Layout.preferredHeight: 38
-                radius: 19
-                color: AppTheme.Theme.accentLight
-
-                Text {
-                    anchors.centerIn: parent
-                    text: historyModel.count + (historyModel.count === 1 ? " task" : " tasks")
-                    color: AppTheme.Theme.surface
-                    font.pixelSize: 13
-                    font.weight: Font.DemiBold
-                }
+            Text {
+                text: "Every small step adds up"
+                font.pixelSize: 14
+                color: AppTheme.Theme.textSecondary
             }
         }
 
-        ScrollView {
+        Rectangle {
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            clip: true
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            Layout.preferredHeight: 148
+            radius: AppTheme.Theme.radiusLarge
+            color: AppTheme.Theme.surface
+            border.width: 1
+            border.color: AppTheme.Theme.divider
 
-            ColumnLayout {
-                width: parent.width
-                spacing: 12
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 22
+                spacing: 24
 
-                Repeater {
-                    model: historyModel
+                Rectangle {
+                    Layout.preferredWidth: 104
+                    Layout.preferredHeight: 104
+                    radius: 52
+                    color: AppTheme.Theme.accent
 
-                    delegate: Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 96
-                        radius: AppTheme.Theme.radiusLarge
-                        color: AppTheme.Theme.surface
-                        border.width: 1
-                        border.color: AppTheme.Theme.divider
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        spacing: 1
 
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 16
-                            spacing: 14
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "LEVEL"
+                            color: AppTheme.Theme.surface
+                            opacity: 0.75
+                            font.pixelSize: 11
+                            font.letterSpacing: 1.5
+                            font.weight: Font.DemiBold
+                        }
 
-                            Rectangle {
-                                Layout.preferredWidth: 58
-                                Layout.preferredHeight: 58
-                                radius: 18
-                                color: model.backgroundColor
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: model.taskIcon
-                                    font.pixelSize: 24
-                                }
-                            }
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 5
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: model.title
-                                    font.pixelSize: 16
-                                    font.bold: true
-                                    color: AppTheme.Theme.textPrimary
-                                    elide: Text.ElideRight
-                                }
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: model.description
-                                    font.pixelSize: 12
-                                    color: AppTheme.Theme.textSecondary
-                                    elide: Text.ElideRight
-                                }
-                            }
-
-                            ColumnLayout {
-                                Layout.preferredWidth: 150
-                                spacing: 4
-
-                                Text {
-                                    Layout.alignment: Qt.AlignRight
-                                    text: model.completionCount + (model.completionCount === 1 ? " time" : " times")
-                                    font.pixelSize: 11
-                                    font.bold: true
-                                    color: AppTheme.Theme.accent
-                                }
-                            }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: taskModel.level
+                            color: AppTheme.Theme.surface
+                            font.pixelSize: 38
+                            font.bold: true
                         }
                     }
                 }
 
-                Item {
-                    visible: historyModel.count === 0
+                ColumnLayout {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 220
+                    spacing: 10
 
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        spacing: 10
-
-                        Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "✓"
-                            font.pixelSize: 42
-                            color: AppTheme.Theme.accentLight
-                        }
+                    RowLayout {
+                        Layout.fillWidth: true
 
                         Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "No completions yet"
+                            text: taskModel.xp + " total XP"
+                            color: AppTheme.Theme.textPrimary
                             font.pixelSize: 18
                             font.bold: true
-                            color: AppTheme.Theme.textPrimary
                         }
 
+                        Item { Layout.fillWidth: true }
+
                         Text {
-                            Layout.alignment: Qt.AlignHCenter
-                            text: "Completed tasks will appear here"
-                            font.pixelSize: 13
+                            text: taskModel.pointsToNextLevel + " XP to level "
+                                  + (taskModel.level + 1)
                             color: AppTheme.Theme.textSecondary
+                            font.pixelSize: 12
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 12
+                        radius: 6
+                        color: AppTheme.Theme.progressTrack
+
+                        Rectangle {
+                            width: parent.width * taskModel.levelProgress / 100
+                            height: parent.height
+                            radius: parent.radius
+                            color: AppTheme.Theme.accentLight
+
+                            Behavior on width {
+                                NumberAnimation { duration: 220 }
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: taskModel.levelProgress + "% of the way to your next level"
+                        color: AppTheme.Theme.textSecondary
+                        font.pixelSize: 12
+                    }
+                }
+            }
+        }
+
+        GridLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            columns: 2
+            rowSpacing: 14
+            columnSpacing: 14
+
+            Repeater {
+                model: [
+                    {
+                        "icon": "✓",
+                        "value": taskModel.totalCompletions,
+                        "label": "Completions in 30 days"
+                    },
+                    {
+                        "icon": "↗",
+                        "value": taskModel.completionRate + "%",
+                        "label": "Schedule completion"
+                    },
+                    {
+                        "icon": "☀",
+                        "value": taskModel.currentStreak,
+                        "label": "Current daily streak"
+                    },
+                    {
+                        "icon": "★",
+                        "value": taskModel.bestStreak,
+                        "label": "Best daily streak"
+                    }
+                ]
+
+                delegate: Rectangle {
+                    required property var modelData
+
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    radius: AppTheme.Theme.radiusMedium
+                    color: AppTheme.Theme.surface
+                    border.width: 1
+                    border.color: AppTheme.Theme.divider
+
+                    RowLayout {
+                        anchors.fill: parent
+                        anchors.margins: 18
+                        spacing: 14
+
+                        Rectangle {
+                            Layout.preferredWidth: 50
+                            Layout.preferredHeight: 50
+                            radius: 16
+                            color: AppTheme.Theme.canvasAlt
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: modelData.icon
+                                color: AppTheme.Theme.accent
+                                font.pixelSize: 24
+                                font.bold: true
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 3
+
+                            Text {
+                                text: modelData.value
+                                color: AppTheme.Theme.textPrimary
+                                font.pixelSize: 25
+                                font.bold: true
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.label
+                                color: AppTheme.Theme.textSecondary
+                                font.pixelSize: 12
+                                wrapMode: Text.WordWrap
+                            }
                         }
                     }
                 }

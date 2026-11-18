@@ -45,6 +45,33 @@ Item {
             }
 
             Rectangle {
+                Layout.preferredWidth: 94
+                Layout.preferredHeight: 44
+                radius: 22
+                color: AppTheme.Theme.surface
+                border.width: 1
+                border.color: AppTheme.Theme.divider
+
+                RowLayout {
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Text {
+                        text: "★"
+                        color: AppTheme.Theme.landingGold
+                        font.pixelSize: 18
+                    }
+
+                    Text {
+                        text: "Level " + taskModel.level
+                        color: AppTheme.Theme.textPrimary
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                    }
+                }
+            }
+
+            Rectangle {
                 Layout.preferredWidth: 132
                 Layout.preferredHeight: 52
                 radius: 18
@@ -66,56 +93,107 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 82
+            Layout.preferredHeight: 94
             radius: 18
             color: AppTheme.Theme.surface
             border.width: 1
             border.color: AppTheme.Theme.divider
 
-            ColumnLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 18
-            anchors.rightMargin: 18
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 8
-
             RowLayout {
-                Layout.fillWidth: true
+                anchors.fill: parent
+                anchors.margins: 18
+                spacing: 18
 
-                Text {
-                    text: taskModel.completedCount + " of " + taskModel.count + " complete"
-                    color: AppTheme.Theme.textPrimary
-                    font.pixelSize: 14
-                    font.weight: Font.DemiBold
-                }
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
 
-                Item { Layout.fillWidth: true }
+                    RowLayout {
+                        Layout.fillWidth: true
 
-                Text {
-                    text: taskModel.progress + "%"
-                    color: AppTheme.Theme.accent
-                    font.pixelSize: 14
-                    font.bold: true
-                }
-            }
+                        Text {
+                            text: taskModel.completedCount + " of " + taskModel.count + " complete"
+                            color: AppTheme.Theme.textPrimary
+                            font.pixelSize: 14
+                            font.weight: Font.DemiBold
+                        }
 
-            Rectangle {
-                Layout.fillWidth: true
-                height: 8
-                radius: 4
-                color: AppTheme.Theme.progressTrack
+                        Item { Layout.fillWidth: true }
 
-                Rectangle {
-                    width: parent.width * taskModel.progress / 100
-                    height: parent.height
-                    radius: parent.radius
-                    color: AppTheme.Theme.accentLight
+                        Text {
+                            text: taskModel.progress + "%"
+                            color: AppTheme.Theme.accent
+                            font.pixelSize: 14
+                            font.bold: true
+                        }
+                    }
 
-                    Behavior on width {
-                        NumberAnimation { duration: 180 }
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 8
+                        radius: 4
+                        color: AppTheme.Theme.progressTrack
+
+                        Rectangle {
+                            width: parent.width * taskModel.progress / 100
+                            height: parent.height
+                            radius: parent.radius
+                            color: AppTheme.Theme.accentLight
+
+                            Behavior on width {
+                                NumberAnimation { duration: 180 }
+                            }
+                        }
                     }
                 }
-            }
+
+                Rectangle {
+                    Layout.preferredWidth: 1
+                    Layout.fillHeight: true
+                    color: AppTheme.Theme.divider
+                }
+
+                ColumnLayout {
+                    Layout.preferredWidth: 190
+                    spacing: 7
+
+                    RowLayout {
+                        Layout.fillWidth: true
+
+                        Text {
+                            text: taskModel.xp + " XP"
+                            color: AppTheme.Theme.textPrimary
+                            font.pixelSize: 16
+                            font.bold: true
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Text {
+                            text: taskModel.pointsToNextLevel + " to go"
+                            color: AppTheme.Theme.textSecondary
+                            font.pixelSize: 11
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 8
+                        radius: 4
+                        color: AppTheme.Theme.progressTrack
+
+                        Rectangle {
+                            width: parent.width * taskModel.levelProgress / 100
+                            height: parent.height
+                            radius: parent.radius
+                            color: AppTheme.Theme.landingGold
+
+                            Behavior on width {
+                                NumberAnimation { duration: 180 }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -146,6 +224,8 @@ Item {
                         description: model.description
                         taskIcon: model.taskIcon
                         impact: model.impact
+                        frequency: model.frequency
+                        points: model.points
                         backgroundColor: model.backgroundColor
                         completed: model.completed
                         createdAt: model.createdAt
@@ -165,66 +245,232 @@ Item {
         }
     }
 
-    Dialog {
-        id: addTaskDialog
-        anchors.centerIn: parent
-        modal: true
-        title: "Add a self-care task"
-        width: Math.min(root.width - 48, 420)
-        footer: DialogButtonBox {
-            buttonLayout: DialogButtonBox.AndroidLayout
-            standardButtons: DialogButtonBox.Ok | DialogButtonBox.Cancel
-            delegate: Button {
-                implicitHeight: 52
-                implicitWidth: 112
-                font.pixelSize: 15
-            }
+    Timer {
+        id: rewardTimer
+        interval: 2500
+        onTriggered: rewardToast.visible = false
+    }
 
-            onAccepted: addTaskDialog.accept()
-            onRejected: addTaskDialog.reject()
+    Rectangle {
+        id: rewardToast
+        visible: false
+        z: 10
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 18
+        width: Math.min(parent.width - 32, 360)
+        height: 58
+        radius: 18
+        color: AppTheme.Theme.accent
+
+        Text {
+            anchors.centerIn: parent
+            text: "Nice work! +" + root.rewardPoints + " XP"
+                  + (root.leveledUp ? "  •  Level " + taskModel.level + " unlocked!" : "")
+            color: AppTheme.Theme.surface
+            font.pixelSize: 15
+            font.weight: Font.DemiBold
+        }
+    }
+
+    property int rewardPoints: 0
+    property bool leveledUp: false
+
+    Connections {
+        target: taskModel
+        function onRewardEarned(points, level, isLevelUp) {
+            root.rewardPoints = points
+            root.leveledUp = isLevelUp
+            rewardToast.visible = true
+            rewardTimer.restart()
+        }
+    }
+
+    AppDialog {
+        id: addTaskDialog
+        objectName: "addTaskDialog"
+        anchors.centerIn: parent
+        width: Math.min(root.width - 40, 600)
+        title: "Add a self-care task"
+        icon: "+"
+        subtitle: "Choose a schedule and priority for your next small step."
+        footer: Item {
+            implicitHeight: 68
+
+            RowLayout {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: 24
+                spacing: 10
+
+                ActionButton {
+                    text: "Cancel"
+                    onClicked: addTaskDialog.reject()
+                }
+
+                ActionButton {
+                    text: "Add task"
+                    primary: true
+                    enabled: titleField.text.trim().length > 0
+                    onClicked: addTaskDialog.accept()
+                }
+            }
         }
 
         ColumnLayout {
             width: parent.width
             spacing: 12
 
-            TextField {
-                id: titleField
+            RowLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 54
-                placeholderText: "Task name"
-                font.pixelSize: 16
+                spacing: 12
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    spacing: 6
+
+                    Text {
+                        text: "Task name"
+                        color: AppTheme.Theme.textSecondary
+                        font.pixelSize: 12
+                        font.weight: Font.DemiBold
+                    }
+
+                    TextField {
+                        id: titleField
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        placeholderText: "e.g. Brush teeth"
+                        font.pixelSize: 16
+                        color: AppTheme.Theme.textPrimary
+                        background: Rectangle {
+                            radius: 14
+                            color: titleField.activeFocus
+                                  ? AppTheme.Theme.surface
+                                  : AppTheme.Theme.canvas
+                            border.width: titleField.activeFocus ? 2 : 1
+                            border.color: titleField.activeFocus
+                                         ? AppTheme.Theme.accentLight
+                                         : AppTheme.Theme.divider
+                        }
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                    spacing: 6
+
+                    Text {
+                        text: "Note (optional)"
+                        color: AppTheme.Theme.textSecondary
+                        font.pixelSize: 12
+                        font.weight: Font.DemiBold
+                    }
+
+                    TextField {
+                        id: descriptionField
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        placeholderText: "A helpful detail"
+                        font.pixelSize: 15
+                        color: AppTheme.Theme.textPrimary
+                        background: Rectangle {
+                            radius: 14
+                            color: descriptionField.activeFocus
+                                  ? AppTheme.Theme.surface
+                                  : AppTheme.Theme.canvas
+                            border.width: descriptionField.activeFocus ? 2 : 1
+                            border.color: descriptionField.activeFocus
+                                         ? AppTheme.Theme.accentLight
+                                         : AppTheme.Theme.divider
+                        }
+                    }
+                }
             }
 
-            TextField {
-                id: descriptionField
+            RowLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 54
-                placeholderText: "Short description"
-                font.pixelSize: 16
+                spacing: 12
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 5
+
+                    Text {
+                        text: "Frequency"
+                        color: AppTheme.Theme.textSecondary
+                        font.pixelSize: 12
+                        font.weight: Font.DemiBold
+                    }
+
+                    FieldComboBox {
+                        id: frequencyField
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        model: ["Daily", "Weekly", "As needed"]
+                    }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 5
+
+                    Text {
+                        text: "Priority"
+                        color: AppTheme.Theme.textSecondary
+                        font.pixelSize: 12
+                        font.weight: Font.DemiBold
+                    }
+
+                    FieldComboBox {
+                        id: impactField
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 50
+                        model: ["Low", "Medium", "High"]
+                        currentIndex: 1
+                    }
+                }
             }
 
-            ComboBox {
-                id: impactField
+            Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 54
-                model: ["Low", "Medium", "High"]
-                font.pixelSize: 16
+                Layout.preferredHeight: 38
+                radius: 12
+                color: AppTheme.Theme.taskMint
+
+                Text {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    text: frequencyField.currentText + " task · "
+                          + impactField.currentText + " priority · +"
+                          + (impactField.currentText === "High"
+                             ? 30
+                             : impactField.currentText === "Medium" ? 20 : 10)
+                          + " XP"
+                    verticalAlignment: Text.AlignVCenter
+                    color: AppTheme.Theme.impactMedium
+                    font.pixelSize: 12
+                    font.weight: Font.DemiBold
+                }
             }
         }
 
         onOpened: titleField.forceActiveFocus()
         onAccepted: {
-            if (taskModel.addTask(
+            if (taskModel.addTaskWithFrequency(
                     titleField.text,
                     descriptionField.text,
                     "Anytime",
                     AppTheme.Theme.taskMint,
                     impactField.currentText,
-                    "🌿")) {
+                    "🌿",
+                    frequencyField.currentText)) {
                 titleField.text = ""
                 descriptionField.text = ""
                 impactField.currentIndex = 1
+                frequencyField.currentIndex = 0
             }
         }
     }

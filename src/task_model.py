@@ -5,6 +5,7 @@ from PySide6.QtCore import (
     QAbstractListModel,
     QModelIndex,
     Property,
+    QTimer,
     Signal,
     Qt,
     Slot,
@@ -78,10 +79,74 @@ class CompletionHistoryModel(QAbstractListModel):
         self.countChanged.emit()
 
 
+class TaskAttentionModel(QAbstractListModel):
+    countChanged = Signal()
+
+    TaskIdRole = Qt.ItemDataRole.UserRole + 1
+    TitleRole = TaskIdRole + 1
+    DescriptionRole = TitleRole + 1
+    BackgroundColorRole = DescriptionRole + 1
+    ImpactRole = BackgroundColorRole + 1
+    IconRole = ImpactRole + 1
+    FrequencyRole = IconRole + 1
+    MissedRole = FrequencyRole + 1
+    CompletionRateRole = MissedRole + 1
+
+    def __init__(self):
+        super().__init__()
+        self.database = Database()
+        self.entries = self.database.get_attention_tasks()
+
+    def roleNames(self):
+        return {
+            self.TaskIdRole: b"taskId",
+            self.TitleRole: b"title",
+            self.DescriptionRole: b"description",
+            self.BackgroundColorRole: b"backgroundColor",
+            self.ImpactRole: b"impact",
+            self.IconRole: b"taskIcon",
+            self.FrequencyRole: b"frequency",
+            self.MissedRole: b"missed",
+            self.CompletionRateRole: b"completionRate",
+        }
+
+    def rowCount(self, parent=QModelIndex()):
+        return 0 if parent.isValid() else len(self.entries)
+
+    def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        if not index.isValid() or not 0 <= index.row() < len(self.entries):
+            return None
+        entry = self.entries[index.row()]
+        return {
+            self.TaskIdRole: entry["task_id"],
+            self.TitleRole: entry["title"],
+            self.DescriptionRole: entry["description"],
+            self.BackgroundColorRole: entry["background_color"],
+            self.ImpactRole: entry["impact"],
+            self.IconRole: entry["icon"],
+            self.FrequencyRole: entry["frequency"],
+            self.MissedRole: entry["missed"],
+            self.CompletionRateRole: entry["completion_rate"],
+        }.get(role)
+
+    @Property(int, notify=countChanged)
+    def count(self):
+        return len(self.entries)
+
+    def refresh(self):
+        self.beginResetModel()
+        self.entries = self.database.get_attention_tasks()
+        self.endResetModel()
+        self.countChanged.emit()
+
+
 class TaskModel(QAbstractListModel):
     countChanged = Signal()
     completedCountChanged = Signal()
     progressChanged = Signal()
+    xpChanged = Signal()
+    rewardEarned = Signal(int, int, bool)
+    statsChanged = Signal()
 
     IdRole = Qt.ItemDataRole.UserRole + 1
     TitleRole = IdRole + 1
@@ -92,13 +157,24 @@ class TaskModel(QAbstractListModel):
     IconRole = IdRole + 6
     CreatedAtRole = IdRole + 7
     CompletedRole = IdRole + 8
+    PointsRole = IdRole + 9
+    FrequencyRole = IdRole + 10
 
-    def __init__(self, history_model=None):
+    XP_PER_LEVEL = 100
+
+    def __init__(self, history_model=None, attention_model=None):
         super().__init__()
 
         self.database = Database()
         self.tasks = self.database.get_tasks()
         self.history_model = history_model
+        self.attention_model = attention_model
+        self.total_xp = self.database.get_total_xp()
+        self.stats = self.database.get_progress_stats()
+        self.period_timer = QTimer(self)
+        self.period_timer.setInterval(60_000)
+        self.period_timer.timeout.connect(self.refreshPeriods)
+        self.period_timer.start()
 
     # Expose database fields to QML
     def roleNames(self):
@@ -112,6 +188,8 @@ class TaskModel(QAbstractListModel):
             self.IconRole: b"taskIcon",
             self.CreatedAtRole: b"createdAt",
             self.CompletedRole: b"completed",
+            self.PointsRole: b"points",
+            self.FrequencyRole: b"frequency",
         }
 
     # Number of tasks in the model
@@ -141,6 +219,8 @@ class TaskModel(QAbstractListModel):
             self.IconRole: task["icon"],
             self.CreatedAtRole: task["created_at"],
             self.CompletedRole: bool(task["completed"]),
+            self.PointsRole: self.database.XP_BY_IMPACT.get(task["impact"], 10),
+            self.FrequencyRole: task["frequency"],
         }
 
         return roles.get(role)
@@ -162,7 +242,8 @@ class TaskModel(QAbstractListModel):
         if bool(task["completed"]) == completed:
             return True
 
-        self.database.update_task_completion(
+        old_level = self.level
+        awarded_points = self.database.update_task_completion(
             task["id"],
             completed
         )
@@ -176,6 +257,17 @@ class TaskModel(QAbstractListModel):
         )
         self.completedCountChanged.emit()
         self.progressChanged.emit()
+        self.stats = self.database.get_progress_stats()
+        self.statsChanged.emit()
+
+        if awarded_points:
+            self.total_xp += awarded_points
+            self.xpChanged.emit()
+            self.rewardEarned.emit(
+                awarded_points,
+                self.level,
+                self.level > old_level,
+            )
 
         return True
 
@@ -191,6 +283,8 @@ class TaskModel(QAbstractListModel):
                 )
                 if updated and completed and self.history_model is not None:
                     self.history_model.refresh()
+                if updated and self.attention_model is not None:
+                    self.attention_model.refresh()
                 return updated
 
         return False
@@ -210,9 +304,85 @@ class TaskModel(QAbstractListModel):
 
         return round(self.completedCount * 100 / len(self.tasks))
 
+    @Property(int, notify=xpChanged)
+    def xp(self):
+        return self.total_xp
+
+    @Property(int, notify=xpChanged)
+    def level(self):
+        return self.total_xp // self.XP_PER_LEVEL + 1
+
+    @Property(int, notify=xpChanged)
+    def levelProgress(self):
+        return self.total_xp % self.XP_PER_LEVEL
+
+    @Property(int, notify=xpChanged)
+    def pointsToNextLevel(self):
+        return self.XP_PER_LEVEL - self.levelProgress
+
+    @Slot()
+    def refreshPeriods(self):
+        if not self.database.reset_expired_tasks():
+            return
+
+        self.beginResetModel()
+        self.tasks = self.database.get_tasks()
+        self.endResetModel()
+        self.completedCountChanged.emit()
+        self.progressChanged.emit()
+        self.stats = self.database.get_progress_stats()
+        self.statsChanged.emit()
+        if self.attention_model is not None:
+            self.attention_model.refresh()
+
+    @Property(int, notify=statsChanged)
+    def totalCompletions(self):
+        return self.stats["total_completions"]
+
+    @Property(int, notify=statsChanged)
+    def activeDays(self):
+        return self.stats["active_days"]
+
+    @Property(int, notify=statsChanged)
+    def currentStreak(self):
+        return self.stats["current_streak"]
+
+    @Property(int, notify=statsChanged)
+    def bestStreak(self):
+        return self.stats["best_streak"]
+
+    @Property(int, notify=statsChanged)
+    def completionRate(self):
+        return self.stats["completion_rate"]
+
     @Slot(str, str, str, str, str, str)
     def addTask(self, title, description, category,
                 background_color, impact, icon):
+        return self._add_task(
+            title,
+            description,
+            category,
+            background_color,
+            impact,
+            icon,
+            "Daily",
+        )
+
+    @Slot(str, str, str, str, str, str, str)
+    def addTaskWithFrequency(self, title, description, category,
+                             background_color, impact, icon, frequency):
+        return self._add_task(
+            title,
+            description,
+            category,
+            background_color,
+            impact,
+            icon,
+            frequency,
+        )
+
+    def _add_task(self, title, description, category,
+                  background_color, impact, icon, frequency):
         title = title.strip()
         if not title:
             return False
@@ -226,6 +396,7 @@ class TaskModel(QAbstractListModel):
             impact,
             icon,
             now,
+            frequency,
         )
 
         self.beginInsertRows(QModelIndex(), len(self.tasks), len(self.tasks))
@@ -239,10 +410,13 @@ class TaskModel(QAbstractListModel):
             "icon": icon,
             "created_at": now,
             "completed": 0,
+            "frequency": frequency,
         })
         self.endInsertRows()
         self.countChanged.emit()
         self.progressChanged.emit()
+        if self.attention_model is not None:
+            self.attention_model.refresh()
         return True
 
     @Slot(int)
@@ -256,6 +430,10 @@ class TaskModel(QAbstractListModel):
                 self.countChanged.emit()
                 self.completedCountChanged.emit()
                 self.progressChanged.emit()
+                self.stats = self.database.get_progress_stats()
+                self.statsChanged.emit()
+                if self.attention_model is not None:
+                    self.attention_model.refresh()
                 return True
 
         return False

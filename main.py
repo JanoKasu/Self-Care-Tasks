@@ -9,7 +9,11 @@ from PySide6.QtQml import QQmlApplicationEngine
 
 from src.inactivity_controller import InactivityController
 from src.network_controller import NetworkController
-from src.task_model import CompletionHistoryModel, TaskModel
+from src.task_model import (
+    CompletionHistoryModel,
+    TaskAttentionModel,
+    TaskModel,
+)
 
 
 def resource_path(*parts):
@@ -25,7 +29,8 @@ def main():
     engine = QQmlApplicationEngine()
 
     history_model = CompletionHistoryModel()
-    task_model = TaskModel(history_model)
+    attention_model = TaskAttentionModel()
+    task_model = TaskModel(history_model, attention_model)
     network_controller = NetworkController()
     inactivity_controller = InactivityController(timeout_seconds=30)
     app.installEventFilter(inactivity_controller)
@@ -37,6 +42,10 @@ def main():
     engine.rootContext().setContextProperty(
         "historyModel",
         history_model
+    )
+    engine.rootContext().setContextProperty(
+        "attentionModel",
+        attention_model
     )
     engine.rootContext().setContextProperty(
         "inactivityController",

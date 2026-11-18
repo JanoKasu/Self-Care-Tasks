@@ -9,7 +9,11 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtCore import QObject
 
-from src.task_model import CompletionHistoryModel, TaskModel
+from src.task_model import (
+    CompletionHistoryModel,
+    TaskAttentionModel,
+    TaskModel,
+)
 from src.network_controller import NetworkController
 
 
@@ -18,13 +22,18 @@ class NavigationTests(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QGuiApplication.instance() or QGuiApplication([])
         cls.engine = QQmlApplicationEngine()
-        cls.task_model = TaskModel()
         cls.history_model = CompletionHistoryModel()
+        cls.attention_model = TaskAttentionModel()
+        cls.task_model = TaskModel(cls.history_model, cls.attention_model)
         cls.network_controller = NetworkController()
         cls.engine.rootContext().setContextProperty("taskModel", cls.task_model)
         cls.engine.rootContext().setContextProperty(
             "historyModel",
             cls.history_model
+        )
+        cls.engine.rootContext().setContextProperty(
+            "attentionModel",
+            cls.attention_model
         )
         cls.engine.rootContext().setContextProperty(
             "networkController",
@@ -50,7 +59,7 @@ class NavigationTests(unittest.TestCase):
         page_stack = self.root_objects[0].findChild(QObject, "pageStack")
         self.assertIsNotNone(page_stack)
 
-        for index in (0, 1, 2):
+        for index in (0, 1, 2, 3):
             navigation.setProperty("currentIndex", index)
             self.app.processEvents()
             self.assertEqual(navigation.property("currentIndex"), index)

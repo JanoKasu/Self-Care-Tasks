@@ -2,6 +2,8 @@ import gc
 import os
 import tempfile
 import unittest
+from contextlib import closing
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -89,13 +91,22 @@ class DatabaseTests(unittest.TestCase):
         )
 
         self.database.update_task_completion(task_id, True)
-        self.database.update_task_completion(task_id, True)
+        with closing(self.database.connect()) as connection:
+            connection.execute(
+                "INSERT INTO task_completions (task_id, completed_at) "
+                "VALUES (?, ?)",
+                (
+                    task_id,
+                    (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
+                ),
+            )
+            connection.commit()
 
         history = self.database.get_completion_history()
         self.assertEqual(len(history), 1)
         self.assertEqual(history[0]["completion_count"], 2)
 
-        with self.database.connect() as connection:
+        with closing(self.database.connect()) as connection:
             connection.execute(
                 "UPDATE task_completions SET completed_at = ?",
                 ("2025-01-01T12:00:00+00:00",),
@@ -103,6 +114,150 @@ class DatabaseTests(unittest.TestCase):
             connection.commit()
 
         self.assertEqual(self.database.get_completion_history(), [])
+
+    def test_completion_awards_persistent_xp_once_per_task_per_day(self):
+        task_id = self.database.add_task(
+            "Go for a walk",
+            "Step outside for ten minutes",
+            "Movement",
+            "#abcdef",
+            "High",
+            "walk",
+            "2026-11-17T12:00:00+00:00",
+        )
+
+        self.assertEqual(
+            self.database.update_task_completion(task_id, True),
+            30,
+        )
+        self.assertEqual(self.database.get_total_xp(), 30)
+
+        self.database.update_task_completion(task_id, False)
+        self.assertEqual(
+            self.database.update_task_completion(task_id, True),
+            0,
+        )
+        self.assertEqual(self.database.get_total_xp(), 30)
+        reloaded_database = Database()
+        reloaded_database.db_path = self.database.db_path
+        reloaded_database.initialize()
+        self.assertEqual(reloaded_database.get_total_xp(), 30)
+
+    def test_frequency_is_persisted_and_drives_attention(self):
+        created_at = (
+            datetime.now(timezone.utc) - timedelta(days=3)
+        ).isoformat()
+        daily_id = self.database.add_task(
+            "Brush teeth",
+            "Morning and evening",
+            "Health",
+            "#ffffff",
+            "Low",
+            "tooth",
+            created_at,
+            "Daily",
+        )
+        self.database.add_task(
+            "Read when relaxed",
+            "Optional",
+            "Wellbeing",
+            "#ffffff",
+            "Medium",
+            "book",
+            created_at,
+            "As needed",
+        )
+
+        attention = self.database.get_attention_tasks()
+        self.assertEqual(len(attention), 1)
+        self.assertEqual(attention[0]["task_id"], daily_id)
+        self.assertEqual(attention[0]["frequency"], "Daily")
+        self.assertGreaterEqual(attention[0]["missed"], 2)
+
+    def test_expired_daily_completion_is_reset_on_startup(self):
+        task_id = self.database.add_task(
+            "Daily stretch",
+            "Move for five minutes",
+            "Movement",
+            "#ffffff",
+            "Medium",
+            "stretch",
+            (datetime.now(timezone.utc) - timedelta(days=1)).isoformat(),
+            "Daily",
+        )
+        with closing(self.database.connect()) as connection:
+            connection.execute(
+                "UPDATE tasks SET completed = 1, completed_period = ? "
+                "WHERE id = ?",
+                (
+                    (datetime.now().astimezone().date() - timedelta(days=1))
+                    .isoformat(),
+                    task_id,
+                ),
+            )
+            connection.commit()
+
+        self.database.initialize()
+
+        task = self.database.get_tasks()[0]
+        self.assertEqual(task["completed"], 0)
+
+    def test_task_model_tracks_xp_level_and_next_level_progress(self):
+        import src.task_model as task_model_module
+
+        task_ids = []
+        for index, impact in enumerate(("High", "High", "High", "Medium")):
+            task_ids.append(self.database.add_task(
+                f"Task {index}",
+                "Self care",
+                "Wellness",
+                "#ffffff",
+                impact,
+                "care",
+                "2026-11-17T12:00:00+00:00",
+            ))
+
+        original_database = task_model_module.Database
+        task_model_module.Database = lambda: self.database
+        try:
+            model = TaskModel()
+            for task_id in task_ids:
+                model.setCompleted(task_id, True)
+        finally:
+            task_model_module.Database = original_database
+
+        self.assertEqual(model.xp, 110)
+        self.assertEqual(model.level, 2)
+        self.assertEqual(model.levelProgress, 10)
+        self.assertEqual(model.pointsToNextLevel, 90)
+        self.assertEqual(
+            model.data(model.index(0, 0), TaskModel.PointsRole),
+            30,
+        )
+
+    def test_task_model_exposes_frequency(self):
+        import src.task_model as task_model_module
+
+        original_database = task_model_module.Database
+        task_model_module.Database = lambda: self.database
+        try:
+            model = TaskModel()
+            model.addTaskWithFrequency(
+                "Brush teeth",
+                "Morning and evening",
+                "Health",
+                "#ffffff",
+                "Low",
+                "tooth",
+                "Daily",
+            )
+        finally:
+            task_model_module.Database = original_database
+
+        self.assertEqual(
+            model.data(model.index(0, 0), TaskModel.FrequencyRole),
+            "Daily",
+        )
 
     def test_task_model_rejects_blank_title(self):
         import src.task_model as task_model_module

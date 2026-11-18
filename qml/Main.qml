@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.VirtualKeyboard
 import "." as AppTheme
 
+import "components"
 import "pages"
 
 ApplicationWindow {
@@ -19,103 +20,159 @@ ApplicationWindow {
     title: "Self Care Dashboard"
     color: AppTheme.Theme.canvas
 
-    ColumnLayout {
+    RowLayout {
         anchors.fill: parent
         spacing: 0
 
         // Navigation bar
-        TabBar {
+        Item {
             id: navigation
             objectName: "navigation"
 
-            Layout.fillWidth: true
-            Layout.preferredHeight: 72
-            leftPadding: 16
-            rightPadding: 16
-            topPadding: 10
-            bottomPadding: 10
-            spacing: 6
+            property int currentIndex: 0
 
-            background: Rectangle {
+            Layout.fillHeight: true
+            Layout.preferredWidth: 88
+
+            Rectangle {
+                anchors.fill: parent
                 color: AppTheme.Theme.surface
 
                 Rectangle {
-                    anchors.bottom: parent.bottom
-                    width: parent.width
-                    height: 1
+                    anchors.right: parent.right
+                    width: 1
+                    height: parent.height
                     color: AppTheme.Theme.divider
                 }
             }
 
-            TabButton {
-                id: homeTab
-                text: "Home"
-                font.pixelSize: AppTheme.Theme.fontBody
-                font.weight: checked ? Font.DemiBold : Font.Normal
+            ColumnLayout {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                anchors.topMargin: 18
+                spacing: 10
 
-                background: Rectangle {
-                    anchors.fill: parent
-                    radius: 14
-                    color: homeTab.checked ? AppTheme.Theme.accent : "transparent"
-                    border.width: homeTab.checked ? 0 : 1
-                    border.color: "transparent"
+                TabButton {
+                    id: homeTab
+                    objectName: "homeTab"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 60
+                    checked: navigation.currentIndex === 0
+                    hoverEnabled: true
+                    Accessible.name: "Home"
+                    ToolTip.text: "Home"
+                    ToolTip.visible: hovered
+                    onClicked: navigation.currentIndex = 0
 
-                    Behavior on color { ColorAnimation { duration: 180 } }
-                    Behavior on border.color { ColorAnimation { duration: 180 } }
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: homeTab.checked ? AppTheme.Theme.accent : "transparent"
+
+                        Behavior on color { ColorAnimation { duration: 180 } }
+                    }
+
+                    contentItem: Text {
+                        text: "\u2302"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: homeTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                        font.pixelSize: 30
+                        font.weight: Font.DemiBold
+                    }
                 }
 
-                contentItem: Text {
-                    text: homeTab.text
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: homeTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
-                    font: homeTab.font
-                }
-            }
+                TabButton {
+                    id: dashboardTab
+                    objectName: "dashboardTab"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 60
+                    checked: navigation.currentIndex === 1
+                    hoverEnabled: true
+                    Accessible.name: "Dashboard"
+                    ToolTip.text: "Dashboard"
+                    ToolTip.visible: hovered
+                    onClicked: navigation.currentIndex = 1
 
-            TabButton {
-                id: dashboardTab
-                text: "Dashboard"
-                font.pixelSize: AppTheme.Theme.fontBody
-                font.weight: checked ? Font.DemiBold : Font.Normal
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: dashboardTab.checked ? AppTheme.Theme.accent : "transparent"
 
-                background: Rectangle {
-                    anchors.fill: parent
-                    radius: 14
-                    color: dashboardTab.checked ? AppTheme.Theme.accent : "transparent"
+                        Behavior on color { ColorAnimation { duration: 180 } }
+                    }
 
-                    Behavior on color { ColorAnimation { duration: 180 } }
-                }
-
-                contentItem: Text {
-                    text: dashboardTab.text
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: dashboardTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
-                    font: dashboardTab.font
-                }
-            }
-
-            TabButton {
-                id: historyTab
-                text: "History"
-                font.pixelSize: AppTheme.Theme.fontBody
-                font.weight: checked ? Font.DemiBold : Font.Normal
-
-                background: Rectangle {
-                    anchors.fill: parent
-                    radius: 14
-                    color: historyTab.checked ? AppTheme.Theme.accent : "transparent"
-
-                    Behavior on color { ColorAnimation { duration: 180 } }
+                    contentItem: Text {
+                        text: "\u25A6"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: dashboardTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                        font.pixelSize: 25
+                        font.weight: Font.DemiBold
+                    }
                 }
 
-                contentItem: Text {
-                    text: historyTab.text
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: historyTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
-                    font: historyTab.font
+                TabButton {
+                    id: historyTab
+                    objectName: "historyTab"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 60
+                    checked: navigation.currentIndex === 2
+                    hoverEnabled: true
+                    Accessible.name: "Progress"
+                    ToolTip.text: "Progress"
+                    ToolTip.visible: hovered
+                    onClicked: navigation.currentIndex = 2
+
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: historyTab.checked ? AppTheme.Theme.accent : "transparent"
+
+                        Behavior on color { ColorAnimation { duration: 180 } }
+                    }
+
+                    contentItem: Text {
+                        text: "\u2197"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: historyTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                        font.pixelSize: 29
+                        font.weight: Font.DemiBold
+                    }
+                }
+
+                TabButton {
+                    id: attentionTab
+                    objectName: "attentionTab"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 60
+                    checked: navigation.currentIndex === 3
+                    hoverEnabled: true
+                    Accessible.name: "Needs attention"
+                    ToolTip.text: "Needs attention"
+                    ToolTip.visible: hovered
+                    onClicked: navigation.currentIndex = 3
+
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: attentionTab.checked ? AppTheme.Theme.accent : "transparent"
+
+                        Behavior on color { ColorAnimation { duration: 180 } }
+                    }
+
+                    contentItem: Text {
+                        text: "!"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                        color: attentionTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                        font.pixelSize: 28
+                        font.weight: Font.Bold
+                    }
                 }
             }
         }
@@ -134,16 +191,17 @@ ApplicationWindow {
             Landing {}
             Dashboard {}
             History {}
+            Attention {}
         }
     }
 
-    Dialog {
+    AppDialog {
         id: networkSetupDialog
         objectName: "networkSetupDialog"
         anchors.centerIn: parent
-        modal: true
-        width: Math.min(parent.width - 48, 460)
-        title: "Internet connection required"
+        title: "Connect to the internet"
+        icon: "⌁"
+        subtitle: "Choose a network or connect an Ethernet cable to continue."
         visible: !networkController.connected
         closePolicy: Popup.NoAutoClose
 
@@ -154,42 +212,90 @@ ApplicationWindow {
 
         ColumnLayout {
             width: parent.width
-            spacing: 14
+            spacing: 16
 
-            Text {
+            ColumnLayout {
                 Layout.fillWidth: true
-                text: "Automatic connection failed. Connect Ethernet or choose a Wi-Fi network."
-                wrapMode: Text.WordWrap
-                color: AppTheme.Theme.textPrimary
-                font.pixelSize: 14
+                spacing: 6
+
+                Text {
+                    text: "Wi-Fi network"
+                    color: AppTheme.Theme.textSecondary
+                    font.pixelSize: 12
+                    font.weight: Font.DemiBold
+                }
+
+                ComboBox {
+                    id: wifiNetwork
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 54
+                    editable: true
+                    currentIndex: -1
+                    model: networkController.networks
+                    font.pixelSize: 15
+                    leftPadding: 16
+                    rightPadding: 42
+                    background: Rectangle {
+                        radius: 14
+                        color: wifiNetwork.activeFocus
+                              ? AppTheme.Theme.surface
+                              : AppTheme.Theme.canvas
+                        border.width: wifiNetwork.activeFocus ? 2 : 1
+                        border.color: wifiNetwork.activeFocus
+                                     ? AppTheme.Theme.accentLight
+                                     : AppTheme.Theme.divider
+                    }
+                }
             }
 
-            ComboBox {
-                id: wifiNetwork
+            ColumnLayout {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 54
-                editable: true
-                currentIndex: -1
-                model: networkController.networks
+                spacing: 6
+
+                Text {
+                    text: "Password"
+                    color: AppTheme.Theme.textSecondary
+                    font.pixelSize: 12
+                    font.weight: Font.DemiBold
+                }
+
+                TextField {
+                    id: wifiPassword
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 54
+                    placeholderText: "Enter network password"
+                    echoMode: TextInput.Password
+                    font.pixelSize: 16
+                    background: Rectangle {
+                        radius: 14
+                        color: AppTheme.Theme.canvas
+                        border.width: wifiPassword.activeFocus ? 2 : 1
+                        border.color: wifiPassword.activeFocus
+                                     ? AppTheme.Theme.accentLight
+                                     : AppTheme.Theme.divider
+                    }
+                }
             }
 
-            TextField {
-                id: wifiPassword
+            Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 54
-                placeholderText: "Wi-Fi password"
-                echoMode: TextInput.Password
-                font.pixelSize: 16
-            }
-
-            Text {
-                Layout.fillWidth: true
-                text: networkController.status
-                wrapMode: Text.WordWrap
+                Layout.preferredHeight: 42
+                radius: 12
                 color: networkController.connected
-                       ? AppTheme.Theme.impactMedium
-                       : AppTheme.Theme.textSecondary
-                font.pixelSize: 13
+                       ? AppTheme.Theme.taskMint
+                       : AppTheme.Theme.canvasAlt
+
+                Text {
+                    anchors.fill: parent
+                    anchors.margins: 12
+                    text: networkController.status
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.WordWrap
+                    color: networkController.connected
+                           ? AppTheme.Theme.impactMedium
+                           : AppTheme.Theme.textSecondary
+                    font.pixelSize: 12
+                }
             }
 
             RowLayout {
@@ -198,17 +304,16 @@ ApplicationWindow {
 
                 Item { Layout.fillWidth: true }
 
-                Button {
+                ActionButton {
                     text: "Retry"
-                    Layout.preferredHeight: 52
                     Layout.minimumWidth: 104
                     onClicked: networkController.checkConnection()
                 }
 
-                Button {
+                ActionButton {
                     text: "Connect"
-                    Layout.preferredHeight: 52
                     Layout.minimumWidth: 116
+                    primary: true
                     enabled: !networkController.checking
                              && wifiNetwork.editText.length > 0
                     onClicked: networkController.connectNetwork(
@@ -217,7 +322,6 @@ ApplicationWindow {
                     )
                 }
             }
-
         }
     }
 

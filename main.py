@@ -1,11 +1,12 @@
 import sys
 import os
+from pathlib import Path
 
 os.environ.setdefault("QT_IM_MODULE", "QtVirtualKeyboard")
 
-from PySide6.QtGui import QGuiApplication
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QGuiApplication, QWindow
 from PySide6.QtQml import QQmlApplicationEngine
-from PySide6.QtWebEngineQuick import QtWebEngineQuick
 
 from src.inactivity_controller import InactivityController
 from src.network_controller import NetworkController
@@ -13,7 +14,6 @@ from src.task_model import CompletionHistoryModel, TaskModel
 
 
 def main():
-    QtWebEngineQuick.initialize()
     app = QGuiApplication(sys.argv)
 
     engine = QQmlApplicationEngine()
@@ -41,10 +41,21 @@ def main():
         network_controller
     )
 
-    engine.load("qml/Main.qml")
+    project_dir = Path(__file__).resolve().parent
+    engine.load(QUrl.fromLocalFile(str(project_dir / "qml" / "Main.qml")))
 
     if not engine.rootObjects():
         return -1
+
+    if os.environ.get("SELF_CARE_FULLSCREEN", "").lower() in {
+        "1",
+        "true",
+        "yes",
+    }:
+        engine.rootObjects()[0].setProperty(
+            "visibility",
+            QWindow.Visibility.FullScreen,
+        )
 
     return app.exec()
 

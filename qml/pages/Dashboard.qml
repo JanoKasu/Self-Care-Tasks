@@ -444,7 +444,7 @@ Item {
                         id: frequencyField
                         Layout.fillWidth: true
                         Layout.preferredHeight: 50
-                        model: ["Daily", "Weekly", "As needed"]
+                        model: ["Daily", "Weekly", "Monthly"]
                     }
                 }
 

@@ -1,5 +1,5 @@
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from PySide6.QtCore import (
     QAbstractListModel,
@@ -172,9 +172,21 @@ class TaskModel(QAbstractListModel):
         self.total_xp = self.database.get_total_xp()
         self.stats = self.database.get_progress_stats()
         self.period_timer = QTimer(self)
-        self.period_timer.setInterval(60_000)
+        self.period_timer.setSingleShot(True)
         self.period_timer.timeout.connect(self.refreshPeriods)
-        self.period_timer.start()
+        self._schedule_period_refresh()
+
+    def _schedule_period_refresh(self):
+        now = datetime.now().astimezone()
+        tomorrow = (now + timedelta(days=1)).date()
+        next_midnight = datetime.combine(
+            tomorrow,
+            datetime.min.time(),
+            tzinfo=now.tzinfo,
+        )
+        self.period_timer.start(
+            max(1000, int((next_midnight - now).total_seconds() * 1000))
+        )
 
     # Expose database fields to QML
     def roleNames(self):
@@ -322,18 +334,21 @@ class TaskModel(QAbstractListModel):
 
     @Slot()
     def refreshPeriods(self):
-        if not self.database.reset_expired_tasks():
-            return
+        try:
+            if not self.database.reset_expired_tasks():
+                return
 
-        self.beginResetModel()
-        self.tasks = self.database.get_tasks()
-        self.endResetModel()
-        self.completedCountChanged.emit()
-        self.progressChanged.emit()
-        self.stats = self.database.get_progress_stats()
-        self.statsChanged.emit()
-        if self.attention_model is not None:
-            self.attention_model.refresh()
+            self.beginResetModel()
+            self.tasks = self.database.get_tasks()
+            self.endResetModel()
+            self.completedCountChanged.emit()
+            self.progressChanged.emit()
+            self.stats = self.database.get_progress_stats()
+            self.statsChanged.emit()
+            if self.attention_model is not None:
+                self.attention_model.refresh()
+        finally:
+            self._schedule_period_refresh()
 
     @Property(int, notify=statsChanged)
     def totalCompletions(self):

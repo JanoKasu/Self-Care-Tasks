@@ -9,10 +9,18 @@ tasks, or 30 XP for high-impact tasks. Each task can earn XP once per scheduled
 occurrence, and every 100 XP unlocks the next level. XP is stored with the app
 data and is preserved when the 30-day completion history is cleaned up.
 
-Tasks can be scheduled daily, weekly, or as needed, independently of priority.
+Tasks can be scheduled daily, weekly, or monthly, independently of priority.
 The Progress tab summarizes level, XP, streaks, and schedule completion. The
 Needs Attention tab lists recurring tasks with missed daily or weekly
 occurrences.
+
+Completed daily tasks reset at local midnight. Weekly tasks remain checked
+until the next Monday, and monthly tasks remain checked until the first day of
+the next month. The next reset is scheduled automatically and expired tasks
+are also corrected immediately when the app starts.
+
+Task cards use a priority gradient: red for high priority, green for medium
+priority, and gold for low priority.
 
 ## Install on Raspberry Pi OS
 

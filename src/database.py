@@ -123,17 +123,19 @@ class Database:
             )
             current_daily = self.current_period("Daily")
             current_weekly = self.current_period("Weekly")
+            current_monthly = self.current_period("Monthly")
             connection.execute(
                 """
                 UPDATE tasks
                 SET completed_period = CASE
                     WHEN frequency = 'Weekly' THEN ?
+                    WHEN frequency = 'Monthly' THEN ?
                     ELSE ?
                 END
                 WHERE completed = 1
                   AND (completed_period IS NULL OR completed_period = '')
                 """,
-                (current_weekly, current_daily),
+                (current_weekly, current_monthly, current_daily),
             )
             cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
             connection.execute(
@@ -197,6 +199,8 @@ class Database:
         if frequency == "Weekly":
             week_start = current_date - timedelta(days=current_date.weekday())
             return week_start.isoformat()
+        if frequency == "Monthly":
+            return current_date.replace(day=1).isoformat()
         if frequency == "As needed":
             return "ongoing"
         return current_date.isoformat()
@@ -338,6 +342,25 @@ class Database:
                 completed_periods = {
                     self.current_period(
                         "Weekly",
+                        date.fromisoformat(completed_on),
+                    )
+                    for completed_on in completions.get(task["id"], set())
+                    if completed_on is not None
+                }
+            elif task["frequency"] == "Monthly":
+                current_month = today.replace(day=1)
+                earliest_month = thirty_days_ago.replace(day=1)
+                period = max(created.replace(day=1), earliest_month)
+                periods = []
+                while period < current_month:
+                    periods.append(period.isoformat())
+                    if period.month == 12:
+                        period = period.replace(year=period.year + 1, month=1)
+                    else:
+                        period = period.replace(month=period.month + 1)
+                completed_periods = {
+                    self.current_period(
+                        "Monthly",
                         date.fromisoformat(completed_on),
                     )
                     for completed_on in completions.get(task["id"], set())

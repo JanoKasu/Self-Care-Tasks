@@ -3,7 +3,7 @@ import sqlite3
 import tempfile
 import unittest
 from contextlib import closing
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -246,6 +246,97 @@ class DatabaseTests(unittest.TestCase):
 
         task = self.database.get_tasks()[0]
         self.assertEqual(task["completed"], 0)
+
+    def test_current_period_resets_daily_weekly_and_monthly(self):
+        value = date(2026, 11, 18)
+
+        self.assertEqual(
+            self.database.current_period("Daily", value),
+            "2026-11-18",
+        )
+        self.assertEqual(
+            self.database.current_period("Weekly", value),
+            "2026-11-16",
+        )
+        self.assertEqual(
+            self.database.current_period("Monthly", value),
+            "2026-11-01",
+        )
+
+    def test_monthly_and_weekly_completions_expire_by_period(self):
+        weekly_id = self.database.add_task(
+            "Weekly",
+            "",
+            "Health",
+            "#ffffff",
+            "Low",
+            "week",
+            "2026-10-01T12:00:00+00:00",
+            "Weekly",
+        )
+        monthly_id = self.database.add_task(
+            "Monthly",
+            "",
+            "Health",
+            "#ffffff",
+            "Low",
+            "month",
+            "2026-10-01T12:00:00+00:00",
+            "Monthly",
+        )
+        with closing(self.database.connect()) as connection:
+            connection.execute(
+                "UPDATE tasks SET completed = 1, completed_period = '2000-01-01' "
+                "WHERE id IN (?, ?)",
+                (weekly_id, monthly_id),
+            )
+            connection.commit()
+
+        self.assertTrue(self.database.reset_expired_tasks())
+        self.assertTrue(
+            all(task["completed"] == 0 for task in self.database.get_tasks())
+        )
+
+    def test_frequency_drives_xp_period(self):
+        weekly_id = self.database.add_task(
+            "Weekly",
+            "",
+            "Health",
+            "#ffffff",
+            "Medium",
+            "week",
+            datetime.now(timezone.utc).isoformat(),
+            "Weekly",
+        )
+        monthly_id = self.database.add_task(
+            "Monthly",
+            "",
+            "Health",
+            "#ffffff",
+            "High",
+            "month",
+            datetime.now(timezone.utc).isoformat(),
+            "Monthly",
+        )
+
+        self.assertEqual(
+            self.database.update_task_completion(weekly_id, True),
+            20,
+        )
+        self.assertEqual(
+            self.database.update_task_completion(monthly_id, True),
+            30,
+        )
+        self.database.update_task_completion(weekly_id, False)
+        self.database.update_task_completion(monthly_id, False)
+        self.assertEqual(
+            self.database.update_task_completion(weekly_id, True),
+            0,
+        )
+        self.assertEqual(
+            self.database.update_task_completion(monthly_id, True),
+            0,
+        )
 
     def test_task_model_tracks_xp_level_and_next_level_progress(self):
         import src.task_model as task_model_module

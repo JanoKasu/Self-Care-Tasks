@@ -33,11 +33,33 @@ Rectangle {
     implicitHeight: 156
 
     radius: AppTheme.Theme.radiusLarge
-    color: root.backgroundColor
+    gradient: Gradient {
+        GradientStop {
+            position: 0
+            color: root.impact === "High"
+                   ? AppTheme.Theme.impactHighGradientStart
+                   : root.impact === "Medium"
+                     ? AppTheme.Theme.impactMediumGradientStart
+                     : AppTheme.Theme.impactLowGradientStart
+        }
+        GradientStop {
+            position: 1
+            color: root.impact === "High"
+                   ? AppTheme.Theme.impactHighGradientEnd
+                   : root.impact === "Medium"
+                     ? AppTheme.Theme.impactMediumGradientEnd
+                     : AppTheme.Theme.impactLowGradientEnd
+        }
+    }
     layer.enabled: true
+    opacity: root.completed ? 0.82 : 1
 
     border.width: 1
-    border.color: Qt.darker(backgroundColor, 1.08)
+    border.color: root.impact === "High"
+                  ? AppTheme.Theme.impactHigh
+                  : root.impact === "Medium"
+                    ? AppTheme.Theme.impactMedium
+                    : AppTheme.Theme.impactLow
 
     function refreshDuration() {
         if (!createdAt)
@@ -72,8 +94,8 @@ Rectangle {
         }
     }
 
-    Behavior on color {
-        ColorAnimation { duration: 180 }
+    Behavior on opacity {
+        NumberAnimation { duration: 180 }
     }
 
     RowLayout {
@@ -165,9 +187,9 @@ Rectangle {
 
         Checkbox {
             checked: root.completed
-        accessibleName: root.completed
-                        ? "Mark " + root.title + " incomplete"
-                        : "Mark " + root.title + " complete"
+            accessibleName: root.completed
+                            ? "Mark " + root.title + " incomplete"
+                            : "Mark " + root.title + " complete"
 
             boxSize: 38
             cornerRadius: 10

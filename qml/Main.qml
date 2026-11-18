@@ -77,13 +77,24 @@ ApplicationWindow {
                         Behavior on color { ColorAnimation { duration: 180 } }
                     }
 
-                    contentItem: Text {
-                        text: "\u2302"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: homeTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
-                        font.pixelSize: 30
-                        font.weight: Font.DemiBold
+                    contentItem: Column {
+                        spacing: 1
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "\u2302"
+                            color: homeTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 27
+                            font.weight: Font.DemiBold
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Home"
+                            color: homeTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
+                        }
                     }
                 }
 
@@ -107,13 +118,24 @@ ApplicationWindow {
                         Behavior on color { ColorAnimation { duration: 180 } }
                     }
 
-                    contentItem: Text {
-                        text: "\u25A6"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: dashboardTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
-                        font.pixelSize: 25
-                        font.weight: Font.DemiBold
+                    contentItem: Column {
+                        spacing: 1
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "\u25A6"
+                            color: dashboardTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 23
+                            font.weight: Font.DemiBold
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Tasks"
+                            color: dashboardTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
+                        }
                     }
                 }
 
@@ -137,13 +159,24 @@ ApplicationWindow {
                         Behavior on color { ColorAnimation { duration: 180 } }
                     }
 
-                    contentItem: Text {
-                        text: "\u2197"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: historyTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
-                        font.pixelSize: 29
-                        font.weight: Font.DemiBold
+                    contentItem: Column {
+                        spacing: 1
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "\u2197"
+                            color: historyTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 26
+                            font.weight: Font.DemiBold
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Progress"
+                            color: historyTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
+                        }
                     }
                 }
 
@@ -167,13 +200,44 @@ ApplicationWindow {
                         Behavior on color { ColorAnimation { duration: 180 } }
                     }
 
-                    contentItem: Text {
-                        text: "!"
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        color: attentionTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
-                        font.pixelSize: 28
-                        font.weight: Font.Bold
+                    contentItem: Column {
+                        spacing: 1
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "!"
+                            color: attentionTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 25
+                            font.weight: Font.Bold
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Attention"
+                            color: attentionTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 9
+                            font.weight: Font.DemiBold
+                        }
+                    }
+
+                    Rectangle {
+                        visible: attentionModel.count > 0
+                        width: 20
+                        height: 20
+                        radius: 10
+                        color: AppTheme.Theme.impactHigh
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.rightMargin: 5
+                        anchors.topMargin: 5
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: Math.min(attentionModel.count, 9)
+                            color: AppTheme.Theme.surface
+                            font.pixelSize: 11
+                            font.bold: true
+                        }
                     }
                 }
 
@@ -197,26 +261,36 @@ ApplicationWindow {
                                                  : "transparent"
                     }
 
-                    contentItem: Item {
+                    contentItem: Column {
+                        spacing: 1
+
                         Text {
-                            anchors.centerIn: parent
+                            anchors.horizontalCenter: parent.horizontalCenter
                             text: "\u21BB"
                             color: AppTheme.Theme.textMuted
-                            font.pixelSize: 28
+                            font.pixelSize: 25
                             font.weight: Font.DemiBold
                         }
 
-                        Rectangle {
-                            visible: updateController.available
-                            width: 10
-                            height: 10
-                            radius: 5
-                            color: AppTheme.Theme.accentLight
-                            anchors.right: parent.right
-                            anchors.top: parent.top
-                            anchors.rightMargin: 10
-                            anchors.topMargin: 8
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Updates"
+                            color: AppTheme.Theme.textMuted
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
                         }
+                    }
+
+                    Rectangle {
+                        visible: updateController.available
+                        width: 10
+                        height: 10
+                        radius: 5
+                        color: AppTheme.Theme.accentLight
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.rightMargin: 10
+                        anchors.topMargin: 8
                     }
                 }
             }
@@ -233,7 +307,9 @@ ApplicationWindow {
 
             currentIndex: navigation.currentIndex
 
-            Landing {}
+            Landing {
+                onOpenTasksRequested: navigation.currentIndex = 1
+            }
             Dashboard {}
             History {}
             Attention {}

@@ -14,11 +14,16 @@ Item {
 
     property int boxSize: 27
     property int cornerRadius: 9
+    property string accessibleName: "Mark complete"
 
     signal toggled(bool checked)
 
     implicitWidth: Math.max(boxSize, 56)
     implicitHeight: Math.max(boxSize, 56)
+    activeFocusOnTab: true
+    Accessible.role: Accessible.CheckBox
+    Accessible.name: accessibleName
+    Accessible.checked: checked
 
     Rectangle {
         id: box
@@ -34,6 +39,7 @@ Item {
                ? root.checkedColor
                : root.uncheckedColor
 
+        scale: tapHandler.pressed ? 0.94 : 1
         border.width: 2
         border.color: root.checked
                       ? root.checkedColor
@@ -45,6 +51,10 @@ Item {
 
         Behavior on border.color {
             ColorAnimation { duration: 150 }
+        }
+
+        Behavior on scale {
+            NumberAnimation { duration: 90 }
         }
 
         Text {
@@ -70,6 +80,15 @@ Item {
     }
 
     TapHandler {
+        id: tapHandler
         onTapped: root.toggled(!root.checked)
+    }
+
+    Keys.onPressed: function(event) {
+        if (event.key === Qt.Key_Space || event.key === Qt.Key_Return
+                || event.key === Qt.Key_Enter) {
+            root.toggled(!root.checked)
+            event.accepted = true
+        }
     }
 }

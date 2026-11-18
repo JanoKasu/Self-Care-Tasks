@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import ".." as AppTheme
 
@@ -6,6 +7,7 @@ Item {
     id: root
 
     property date now: new Date()
+    signal openTasksRequested()
 
     Rectangle {
         anchors.fill: parent
@@ -111,6 +113,38 @@ Item {
                 font.pixelSize: 16
                 color: AppTheme.Theme.landingSoftWhite
                 opacity: 0.92
+            }
+
+            Button {
+                id: openTasksButton
+                objectName: "openTasksButton"
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 14
+                text: "Open today's tasks"
+                Accessible.name: "Open today's tasks"
+                onClicked: root.openTasksRequested()
+                hoverEnabled: true
+                leftPadding: 22
+                rightPadding: 22
+                implicitHeight: 48
+                font.pixelSize: 14
+                font.weight: Font.DemiBold
+
+                background: Rectangle {
+                    radius: 16
+                    color: parent.pressed
+                           ? AppTheme.Theme.landingCream
+                           : AppTheme.Theme.landingWhite
+                    opacity: parent.hovered ? 1 : 0.94
+                }
+
+                contentItem: Text {
+                    text: parent.text
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: AppTheme.Theme.landingStart
+                    font: parent.font
+                }
             }
         }
     }

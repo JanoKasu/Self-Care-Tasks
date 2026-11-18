@@ -104,9 +104,12 @@ Rectangle {
             Text {
                 Layout.fillWidth: true
                 text: root.title
-                color: AppTheme.Theme.textPrimary
+                color: root.completed
+                       ? AppTheme.Theme.textMuted
+                       : AppTheme.Theme.textPrimary
                 font.pixelSize: 18
                 font.weight: Font.Bold
+                font.strikeout: root.completed
                 elide: Text.ElideRight
             }
 
@@ -162,6 +165,9 @@ Rectangle {
 
         Checkbox {
             checked: root.completed
+        accessibleName: root.completed
+                        ? "Mark " + root.title + " incomplete"
+                        : "Mark " + root.title + " complete"
 
             boxSize: 38
             cornerRadius: 10

@@ -45,6 +45,7 @@ Item {
             }
 
             Rectangle {
+                visible: root.width >= 650
                 Layout.preferredWidth: 94
                 Layout.preferredHeight: 44
                 radius: 22
@@ -71,23 +72,13 @@ Item {
                 }
             }
 
-            Rectangle {
+            ActionButton {
                 Layout.preferredWidth: 132
                 Layout.preferredHeight: 52
-                radius: 18
-                color: AppTheme.Theme.accent
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "+ Add task"
-                    color: "white"
-                    font.pixelSize: 16
-                    font.weight: Font.DemiBold
-                }
-
-                TapHandler {
-                    onTapped: addTaskDialog.open()
-                }
+                text: "+ Add task"
+                primary: true
+                Accessible.name: "Add a self-care task"
+                onClicked: addTaskDialog.open()
             }
         }
 
@@ -209,6 +200,7 @@ Item {
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
             GridLayout {
+                id: taskGrid
                 width: taskScrollView.availableWidth
 
                 columns: width < 560 ? 1 : 2
@@ -238,6 +230,49 @@ Item {
                                 model.taskId,
                                 isCompleted
                             )
+                        }
+                    }
+
+                    Item {
+                        visible: taskModel.count === 0
+                        Layout.columnSpan: taskGrid.columns
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 220
+
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            spacing: 10
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "+"
+                                color: AppTheme.Theme.accent
+                                font.pixelSize: 38
+                                font.bold: true
+                            }
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "Start with one small step"
+                                color: AppTheme.Theme.textPrimary
+                                font.pixelSize: 18
+                                font.bold: true
+                            }
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "Add a self-care task to begin building your routine."
+                                color: AppTheme.Theme.textSecondary
+                                font.pixelSize: 13
+                                wrapMode: Text.WordWrap
+                            }
+
+                            ActionButton {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: "Add your first task"
+                                primary: true
+                                onClicked: addTaskDialog.open()
+                            }
                         }
                     }
                 }

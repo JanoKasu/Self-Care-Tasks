@@ -85,6 +85,17 @@ class NavigationTests(unittest.TestCase):
         )
         self.assertIsNotNone(virtual_keyboard)
 
+    def test_touchscreen_entry_points_are_keyboard_accessible(self):
+        home_task_button = self.root_objects[0].findChild(
+            QObject,
+            "openTasksButton"
+        )
+        update_tab = self.root_objects[0].findChild(QObject, "updateTab")
+
+        self.assertIsNotNone(home_task_button)
+        self.assertTrue(home_task_button.property("activeFocusOnTab"))
+        self.assertIsNotNone(update_tab)
+
 
 if __name__ == "__main__":
     unittest.main()

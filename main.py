@@ -14,6 +14,7 @@ from src.task_model import (
     TaskAttentionModel,
     TaskModel,
 )
+from src.update_controller import UpdateController
 
 PROJECT_DIR = Path(__file__).resolve().parent
 
@@ -31,6 +32,7 @@ def main():
     attention_model = TaskAttentionModel()
     task_model = TaskModel(history_model, attention_model)
     network_controller = NetworkController()
+    update_controller = UpdateController(PROJECT_DIR)
     inactivity_controller = InactivityController(timeout_seconds=30)
     app.installEventFilter(inactivity_controller)
 
@@ -53,6 +55,10 @@ def main():
     engine.rootContext().setContextProperty(
         "networkController",
         network_controller
+    )
+    engine.rootContext().setContextProperty(
+        "updateController",
+        update_controller
     )
 
     engine.load(str(resource_path("qml", "Main.qml")))

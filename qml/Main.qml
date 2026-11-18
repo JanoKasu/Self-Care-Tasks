@@ -50,9 +50,11 @@ ApplicationWindow {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
+                anchors.bottom: parent.bottom
                 anchors.leftMargin: 12
                 anchors.rightMargin: 12
                 anchors.topMargin: 18
+                anchors.bottomMargin: 18
                 spacing: 10
 
                 TabButton {
@@ -174,6 +176,49 @@ ApplicationWindow {
                         font.weight: Font.Bold
                     }
                 }
+
+                Item { Layout.fillHeight: true }
+
+                TabButton {
+                    id: updateTab
+                    objectName: "updateTab"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 60
+                    hoverEnabled: true
+                    Accessible.name: "App updates"
+                    ToolTip.text: "App updates"
+                    ToolTip.visible: hovered
+                    onClicked: updateDialog.open()
+
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: updateTab.pressed ? AppTheme.Theme.canvasAlt
+                                                 : "transparent"
+                    }
+
+                    contentItem: Item {
+                        Text {
+                            anchors.centerIn: parent
+                            text: "\u21BB"
+                            color: AppTheme.Theme.textMuted
+                            font.pixelSize: 28
+                            font.weight: Font.DemiBold
+                        }
+
+                        Rectangle {
+                            visible: updateController.available
+                            width: 10
+                            height: 10
+                            radius: 5
+                            color: AppTheme.Theme.accentLight
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.rightMargin: 10
+                            anchors.topMargin: 8
+                        }
+                    }
+                }
             }
         }
 
@@ -192,6 +237,74 @@ ApplicationWindow {
             Dashboard {}
             History {}
             Attention {}
+        }
+    }
+
+    AppDialog {
+        id: updateDialog
+        objectName: "updateDialog"
+        anchors.centerIn: parent
+        title: "App updates"
+        icon: "\u21BB"
+        subtitle: "Keep the dashboard current without rebuilding it."
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 18
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.minimumHeight: 72
+                radius: 14
+                color: AppTheme.Theme.canvasAlt
+
+                Text {
+                    anchors.fill: parent
+                    anchors.margins: 16
+                    text: updateController.status
+                    wrapMode: Text.WordWrap
+                    verticalAlignment: Text.AlignVCenter
+                    color: AppTheme.Theme.textSecondary
+                    font.pixelSize: 14
+                }
+            }
+
+            BusyIndicator {
+                Layout.alignment: Qt.AlignHCenter
+                visible: updateController.busy
+                running: visible
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 10
+
+                ActionButton {
+                    text: "Close"
+                    Layout.fillWidth: true
+                    onClicked: updateDialog.close()
+                }
+
+                ActionButton {
+                    text: updateController.available ? "Update" : "Check"
+                    Layout.fillWidth: true
+                    primary: true
+                    enabled: !updateController.busy
+                    onClicked: updateController.available
+                               ? updateController.applyUpdate()
+                               : updateController.checkForUpdates()
+                }
+
+                ActionButton {
+                    text: "Restart"
+                    Layout.fillWidth: true
+                    enabled: !updateController.busy
+                             && updateController.status.startsWith("Update complete")
+                    visible: updateController.status.startsWith("Update complete")
+                    primary: true
+                    onClicked: updateController.restart()
+                }
+            }
         }
     }
 

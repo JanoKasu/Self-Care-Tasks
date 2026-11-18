@@ -62,7 +62,15 @@ activation or `PATH`.
 
 ## Update
 
-Close the running application before updating:
+Click the refresh button at the bottom of the navigation bar. The dashboard
+checks the tracked Git branch, downloads a fast-forward-only update, refreshes
+Python dependencies if `requirements.txt` changed, and then offers to restart.
+Your ignored `data/dashboard.db` file is not changed.
+
+Automatic updates require a clean checkout. Commit, stash, or discard tracked
+local changes before using the update button.
+
+For a command-line update, close the running application and run:
 
 ```bash
 cd "$HOME/Documents/Self-Care-Tasks"
@@ -70,4 +78,5 @@ git pull
 .venv/bin/python -m pip install -r requirements.txt
 ```
 
-Updating the repository does not delete `data/dashboard.db`.
+No application rebuild or repackaging is required; the dashboard runs directly
+from this checkout.

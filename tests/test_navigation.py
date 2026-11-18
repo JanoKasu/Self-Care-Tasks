@@ -15,6 +15,7 @@ from src.task_model import (
     TaskModel,
 )
 from src.network_controller import NetworkController
+from src.update_controller import UpdateController
 
 
 class NavigationTests(unittest.TestCase):
@@ -22,10 +23,12 @@ class NavigationTests(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QGuiApplication.instance() or QGuiApplication([])
         cls.engine = QQmlApplicationEngine()
+        project_root = Path(__file__).resolve().parent.parent
         cls.history_model = CompletionHistoryModel()
         cls.attention_model = TaskAttentionModel()
         cls.task_model = TaskModel(cls.history_model, cls.attention_model)
         cls.network_controller = NetworkController()
+        cls.update_controller = UpdateController(project_root)
         cls.engine.rootContext().setContextProperty("taskModel", cls.task_model)
         cls.engine.rootContext().setContextProperty(
             "historyModel",
@@ -39,8 +42,11 @@ class NavigationTests(unittest.TestCase):
             "networkController",
             cls.network_controller
         )
+        cls.engine.rootContext().setContextProperty(
+            "updateController",
+            cls.update_controller
+        )
 
-        project_root = Path(__file__).resolve().parent.parent
         cls.engine.load(str(project_root / "qml" / "Main.qml"))
         cls.root_objects = cls.engine.rootObjects()
 

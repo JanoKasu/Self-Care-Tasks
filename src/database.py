@@ -1,7 +1,5 @@
 
 import sqlite3
-import os
-import sys
 from contextlib import closing
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -27,13 +25,6 @@ class Database:
 
     @staticmethod
     def default_data_dir():
-        if getattr(sys, "frozen", False):
-            data_home = os.environ.get(
-                "XDG_DATA_HOME",
-                str(Path.home() / ".local" / "share"),
-            )
-            return Path(data_home) / "self-care-tasks"
-
         return Path(__file__).resolve().parent.parent / "data"
 
     def connect(self):

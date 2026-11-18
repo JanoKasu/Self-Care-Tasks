@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Self Care Tasks
-Comment=Daily self-care task dashboard
-Exec=self-care-tasks
-Icon=self-care-tasks
-Terminal=false
-Categories=Utility;
-StartupNotify=true

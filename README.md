@@ -14,7 +14,7 @@ The Progress tab summarizes level, XP, streaks, and schedule completion. The
 Needs Attention tab lists recurring tasks with missed daily or weekly
 occurrences.
 
-## Run from source on Raspberry Pi OS
+## Install on Raspberry Pi OS
 
 ```bash
 cd "$HOME/Documents/Self-Care-Tasks"
@@ -24,88 +24,50 @@ sudo apt install -y python3-venv python3-pip \
   libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils network-manager
 
 python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
-python main.py
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
-Run the application while logged into the Raspberry Pi desktop. Do not use
-`sudo`, because the app stores its data in the current user's home directory.
+## Run
 
-## Build an AppImage
-
-Build on a 64-bit Raspberry Pi or another ARM64 Linux machine. The generated
-binary must match the Pi's architecture and Linux libraries.
+Run the application while logged into the Raspberry Pi desktop:
 
 ```bash
 cd "$HOME/Documents/Self-Care-Tasks"
-chmod +x scripts/build-appimage.sh
-./scripts/build-appimage.sh
+.venv/bin/python main.py
 ```
 
-The first build installs Python packages and downloads the architecture-specific
-`appimagetool`. The finished file is named
-`Self_Care_Tasks-aarch64.AppImage` (the architecture can vary).
+Do not use `sudo`, because the app stores its database in the repository's
+ignored `data/dashboard.db` file.
 
-To run it from the desktop:
+## Autostart
 
-```bash
-chmod +x Self_Care_Tasks-aarch64.AppImage
-./Self_Care_Tasks-aarch64.AppImage
+Create `~/.config/autostart/self-care-dashboard.desktop` with the following
+contents:
+
+```ini
+[Desktop Entry]
+Type=Application
+Name=Self_Care_Dashboard
+Path=/home/janokasu/Documents/Self-Care-Tasks
+Exec=/home/janokasu/Documents/Self-Care-Tasks/.venv/bin/python /home/janokasu/Documents/Self-Care-Tasks/main.py
+Terminal=false
+X-GNOME-Autostart-enabled=true
 ```
 
-You can also right-click the AppImage in the file manager, select **Properties**
-then **Permissions**, enable **Allow executing file as program**, and double-click
-it. The app stores its database at
-`~/.local/share/self-care-tasks/dashboard.db`.
+If the repository is in a different location, replace both occurrences of
+`/home/janokasu/Documents/Self-Care-Tasks` with its absolute path. Keep the
+path to `.venv/bin/python` absolute so autostart does not depend on shell
+activation or `PATH`.
 
-## Deploy a new version to the Pi
+## Update
 
-The instructions below update the repository, rebuild the AppImage, and replace
-the extracted copy used by `AppRun`. Close the running application first.
+Close the running application before updating:
 
 ```bash
 cd "$HOME/Documents/Self-Care-Tasks"
 git pull
-./scripts/build-appimage.sh
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
-If running the AppImage directly works on the Pi, replace the old executable
-and launch the new one:
-
-```bash
-chmod +x Self_Care_Tasks-aarch64.AppImage
-./Self_Care_Tasks-aarch64.AppImage
-```
-
-If the Pi reports that FUSE is unavailable, deploy and extract the AppImage as
-follows. Replace `aarch64` in the filename if the build used a different
-architecture:
-
-```bash
-mkdir -p "$HOME/Applications/SelfCareTasks"
-cp -f Self_Care_Tasks-aarch64.AppImage \
-  "$HOME/Applications/SelfCareTasks/"
-
-cd "$HOME/Applications/SelfCareTasks"
-rm -rf squashfs-root
-chmod +x Self_Care_Tasks-aarch64.AppImage
-./Self_Care_Tasks-aarch64.AppImage --appimage-extract
-./squashfs-root/AppRun
-```
-
-Use that last command for later launches:
-
-```bash
-"$HOME/Applications/SelfCareTasks/squashfs-root/AppRun"
-```
-
-The extracted deployment can be reopened through the file manager by opening
-`AppRun` inside
-`~/Applications/SelfCareTasks/squashfs-root/`. Do not open the `.AppImage`
-with Archiver.
-
-Rebuilding or replacing the application does not delete user data. The task
-database remains at
-`~/.local/share/self-care-tasks/dashboard.db`.
+Updating the repository does not delete `data/dashboard.db`.

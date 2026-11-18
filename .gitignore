@@ -12,7 +12,7 @@ pip-wheel-metadata/
 venv/
 env/
 ENV/
-. Python-version
+.python-version
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/

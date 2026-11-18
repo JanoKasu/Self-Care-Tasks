@@ -1,3 +1,0 @@
-*.sh text eol=lf
-packaging/AppRun text eol=lf
-*.desktop text eol=lf

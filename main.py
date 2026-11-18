@@ -15,12 +15,11 @@ from src.task_model import (
     TaskModel,
 )
 
+PROJECT_DIR = Path(__file__).resolve().parent
+
 
 def resource_path(*parts):
-    base_path = Path(
-        getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)
-    )
-    return base_path.joinpath(*parts)
+    return PROJECT_DIR.joinpath(*parts)
 
 
 def main():

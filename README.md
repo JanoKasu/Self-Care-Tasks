@@ -22,6 +22,10 @@ are also corrected immediately when the app starts.
 Task cards use a priority gradient: red for high priority, green for medium
 priority, and gold for low priority.
 
+The dashboard switches to its dark theme automatically from 8:00 PM until
+6:00 AM, using the device's local time. It schedules a timer for the next
+switch and emits `Theme.themeChanged(darkMode)` when the mode changes.
+
 ## Install on Raspberry Pi OS
 
 ```bash

@@ -1,1 +1,3 @@
 singleton Theme 1.0 Theme.qml
+singleton LightTheme 1.0 LightTheme.qml
+singleton DarkTheme 1.0 DarkTheme.qml

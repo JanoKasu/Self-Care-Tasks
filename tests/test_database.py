@@ -1,7 +1,9 @@
 import gc
+import os
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from src.database import Database
 from src.task_model import TaskModel
@@ -122,6 +124,20 @@ class DatabaseTests(unittest.TestCase):
 
         self.assertFalse(result)
         self.assertEqual(model.count, 0)
+
+    def test_frozen_app_uses_writable_user_data_directory(self):
+        with patch(
+            "src.database.sys.frozen",
+            True,
+            create=True,
+        ), patch.dict(
+            os.environ,
+            {"XDG_DATA_HOME": self.temp_directory.name},
+        ):
+            self.assertEqual(
+                Database.default_data_dir(),
+                Path(self.temp_directory.name) / "self-care-tasks",
+            )
 
 
 if __name__ == "__main__":

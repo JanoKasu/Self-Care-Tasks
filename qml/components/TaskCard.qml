@@ -28,7 +28,7 @@ Rectangle {
     signal completionRequested(bool completed)
 
     implicitWidth: 350
-    implicitHeight: 145
+    implicitHeight: 156
 
     radius: AppTheme.Theme.radiusLarge
     color: root.backgroundColor
@@ -103,7 +103,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: root.title
                 color: AppTheme.Theme.textPrimary
-                font.pixelSize: 17
+                font.pixelSize: 18
                 font.weight: Font.Bold
                 elide: Text.ElideRight
             }
@@ -112,7 +112,7 @@ Rectangle {
                 Layout.fillWidth: true
                 text: root.description
                 color: AppTheme.Theme.textSecondary
-                font.pixelSize: 11
+                font.pixelSize: 13
                 wrapMode: Text.WordWrap
                 maximumLineCount: 2
                 elide: Text.ElideRight
@@ -148,7 +148,7 @@ Rectangle {
         Checkbox {
             checked: root.completed
 
-            boxSize: 32
+            boxSize: 38
             cornerRadius: 10
 
             checkedColor: AppTheme.Theme.accentLight

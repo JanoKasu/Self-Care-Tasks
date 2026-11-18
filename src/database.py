@@ -1,20 +1,34 @@
 
 import sqlite3
+import os
+import sys
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
 class Database:
-    def __init__(self):
-        # Store the database in a persistent local data directory.
-        project_dir = Path(__file__).resolve().parent.parent
-        data_dir = project_dir / "data"
+    def __init__(self, data_dir=None):
+        if data_dir is None:
+            data_dir = self.default_data_dir()
+
+        data_dir = Path(data_dir)
         data_dir.mkdir(parents=True, exist_ok=True)
 
         self.db_path = data_dir / "dashboard.db"
 
         self.initialize()
+
+    @staticmethod
+    def default_data_dir():
+        if getattr(sys, "frozen", False):
+            data_home = os.environ.get(
+                "XDG_DATA_HOME",
+                str(Path.home() / ".local" / "share"),
+            )
+            return Path(data_home) / "self-care-tasks"
+
+        return Path(__file__).resolve().parent.parent / "data"
 
     def connect(self):
         connection = sqlite3.connect(self.db_path)

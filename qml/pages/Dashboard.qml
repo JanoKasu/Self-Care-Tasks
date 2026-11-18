@@ -45,22 +45,22 @@ Item {
             }
 
             Rectangle {
-            Layout.preferredWidth: 84
-            Layout.preferredHeight: 38
-            radius: 19
-            color: AppTheme.Theme.accentLight
+                Layout.preferredWidth: 132
+                Layout.preferredHeight: 52
+                radius: 18
+                color: AppTheme.Theme.accent
 
-            Text {
-                anchors.centerIn: parent
-                text: "+ Add task"
-                color: "white"
-                font.pixelSize: 13
-                font.weight: Font.DemiBold
-            }
+                Text {
+                    anchors.centerIn: parent
+                    text: "+ Add task"
+                    color: "white"
+                    font.pixelSize: 16
+                    font.weight: Font.DemiBold
+                }
 
-            TapHandler {
-                onTapped: addTaskDialog.open()
-            }
+                TapHandler {
+                    onTapped: addTaskDialog.open()
+                }
             }
         }
 
@@ -151,7 +151,7 @@ Item {
                         createdAt: model.createdAt
 
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 145
+                        Layout.preferredHeight: 156
 
                         onCompletionRequested: function(isCompleted) {
                             taskModel.setCompleted(
@@ -170,8 +170,19 @@ Item {
         anchors.centerIn: parent
         modal: true
         title: "Add a self-care task"
-        standardButtons: Dialog.Ok | Dialog.Cancel
         width: Math.min(root.width - 48, 420)
+        footer: DialogButtonBox {
+            buttonLayout: DialogButtonBox.AndroidLayout
+            standardButtons: DialogButtonBox.Ok | DialogButtonBox.Cancel
+            delegate: Button {
+                implicitHeight: 52
+                implicitWidth: 112
+                font.pixelSize: 15
+            }
+
+            onAccepted: addTaskDialog.accept()
+            onRejected: addTaskDialog.reject()
+        }
 
         ColumnLayout {
             width: parent.width
@@ -180,19 +191,25 @@ Item {
             TextField {
                 id: titleField
                 Layout.fillWidth: true
+                Layout.preferredHeight: 54
                 placeholderText: "Task name"
+                font.pixelSize: 16
             }
 
             TextField {
                 id: descriptionField
                 Layout.fillWidth: true
+                Layout.preferredHeight: 54
                 placeholderText: "Short description"
+                font.pixelSize: 16
             }
 
             ComboBox {
                 id: impactField
                 Layout.fillWidth: true
+                Layout.preferredHeight: 54
                 model: ["Low", "Medium", "High"]
+                font.pixelSize: 16
             }
         }
 

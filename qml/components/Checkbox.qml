@@ -17,8 +17,8 @@ Item {
 
     signal toggled(bool checked)
 
-    implicitWidth: boxSize
-    implicitHeight: boxSize
+    implicitWidth: Math.max(boxSize, 56)
+    implicitHeight: Math.max(boxSize, 56)
 
     Rectangle {
         id: box

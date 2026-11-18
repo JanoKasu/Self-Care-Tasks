@@ -97,29 +97,6 @@ ApplicationWindow {
             }
 
             TabButton {
-                id: settingsTab
-                text: "Settings"
-                font.pixelSize: AppTheme.Theme.fontBody
-                font.weight: checked ? Font.DemiBold : Font.Normal
-
-                background: Rectangle {
-                    anchors.fill: parent
-                    radius: 14
-                    color: settingsTab.checked ? AppTheme.Theme.accent : "transparent"
-
-                    Behavior on color { ColorAnimation { duration: 180 } }
-                }
-
-                contentItem: Text {
-                    text: settingsTab.text
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                    color: settingsTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
-                    font: settingsTab.font
-                }
-            }
-
-            TabButton {
                 id: historyTab
                 text: "History"
                 font.pixelSize: AppTheme.Theme.fontBody
@@ -156,7 +133,6 @@ ApplicationWindow {
 
             Landing {}
             Dashboard {}
-            Settings {}
             History {}
         }
     }
@@ -191,6 +167,7 @@ ApplicationWindow {
             ComboBox {
                 id: wifiNetwork
                 Layout.fillWidth: true
+                Layout.preferredHeight: 54
                 editable: true
                 currentIndex: -1
                 model: networkController.networks
@@ -199,8 +176,10 @@ ApplicationWindow {
             TextField {
                 id: wifiPassword
                 Layout.fillWidth: true
+                Layout.preferredHeight: 54
                 placeholderText: "Wi-Fi password"
                 echoMode: TextInput.Password
+                font.pixelSize: 16
             }
 
             Text {
@@ -221,11 +200,15 @@ ApplicationWindow {
 
                 Button {
                     text: "Retry"
+                    Layout.preferredHeight: 52
+                    Layout.minimumWidth: 104
                     onClicked: networkController.checkConnection()
                 }
 
                 Button {
                     text: "Connect"
+                    Layout.preferredHeight: 52
+                    Layout.minimumWidth: 116
                     enabled: !networkController.checking
                              && wifiNetwork.editText.length > 0
                     onClicked: networkController.connectNetwork(
@@ -235,15 +218,16 @@ ApplicationWindow {
                 }
             }
 
-            InputPanel {
-                id: virtualKeyboard
-                objectName: "virtualKeyboard"
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.bottom: parent.bottom
-                z: 100
-                visible: active
-            }
         }
+    }
+
+    InputPanel {
+        id: virtualKeyboard
+        objectName: "virtualKeyboard"
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        z: 100
+        visible: active
     }
 }

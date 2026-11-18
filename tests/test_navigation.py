@@ -50,18 +50,18 @@ class NavigationTests(unittest.TestCase):
         page_stack = self.root_objects[0].findChild(QObject, "pageStack")
         self.assertIsNotNone(page_stack)
 
-        for index in (0, 1, 2, 3):
+        for index in (0, 1, 2):
             navigation.setProperty("currentIndex", index)
             self.app.processEvents()
             self.assertEqual(navigation.property("currentIndex"), index)
             self.assertEqual(page_stack.property("currentIndex"), index)
 
-    def test_settings_page_is_loaded(self):
+    def test_settings_page_is_not_loaded(self):
         settings_page = self.root_objects[0].findChild(
             QObject,
             "settingsPage"
         )
-        self.assertIsNotNone(settings_page)
+        self.assertIsNone(settings_page)
 
     def test_virtual_keyboard_is_loaded(self):
         virtual_keyboard = self.root_objects[0].findChild(

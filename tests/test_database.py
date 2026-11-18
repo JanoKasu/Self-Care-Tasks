@@ -1,9 +1,11 @@
 import gc
+import sqlite3
 import tempfile
 import unittest
 from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from src.database import Database
 from src.task_model import TaskModel
@@ -12,9 +14,7 @@ from src.task_model import TaskModel
 class DatabaseTests(unittest.TestCase):
     def setUp(self):
         self.temp_directory = tempfile.TemporaryDirectory()
-        self.database = Database()
-        self.database.db_path = Path(self.temp_directory.name) / "test.db"
-        self.database.initialize()
+        self.database = Database(Path(self.temp_directory.name))
 
     def tearDown(self):
         gc.collect()
@@ -136,10 +136,57 @@ class DatabaseTests(unittest.TestCase):
             0,
         )
         self.assertEqual(self.database.get_total_xp(), 30)
-        reloaded_database = Database()
-        reloaded_database.db_path = self.database.db_path
-        reloaded_database.initialize()
+        reloaded_database = Database(Path(self.temp_directory.name))
         self.assertEqual(reloaded_database.get_total_xp(), 30)
+
+    def test_backup_is_consistent_and_can_be_reopened(self):
+        task_id = self.database.add_task(
+            "Backup test",
+            "",
+            "Health",
+            "#ffffff",
+            "Low",
+            "test",
+            "2026-11-17T12:00:00+00:00",
+        )
+        backup_path = self.database.backup()
+
+        restored = Database(Path(self.temp_directory.name) / "restored")
+        restored.db_path.unlink(missing_ok=True)
+        restored.db_path.parent.mkdir(parents=True, exist_ok=True)
+        restored.db_path.write_bytes(backup_path.read_bytes())
+
+        self.assertEqual(restored.get_tasks()[0]["id"], task_id)
+        self.assertEqual(restored.get_tasks()[0]["title"], "Backup test")
+
+    def test_schema_version_and_foreign_keys_are_enabled(self):
+        with closing(self.database.connect()) as connection:
+            version = connection.execute("PRAGMA user_version").fetchone()[0]
+            foreign_keys = connection.execute("PRAGMA foreign_keys").fetchone()[0]
+
+        self.assertEqual(version, Database.SCHEMA_VERSION)
+        self.assertEqual(foreign_keys, 1)
+
+    def test_newer_database_is_rejected_without_overwriting_it(self):
+        with closing(self.database.connect()) as connection:
+            connection.execute(
+                f"PRAGMA user_version = {Database.SCHEMA_VERSION + 1}"
+            )
+
+        with self.assertRaisesRegex(sqlite3.DatabaseError, "newer version"):
+            Database(Path(self.temp_directory.name))
+
+        with closing(sqlite3.connect(self.database.db_path)) as connection:
+            version = connection.execute("PRAGMA user_version").fetchone()[0]
+        self.assertEqual(version, Database.SCHEMA_VERSION + 1)
+
+    def test_custom_data_directory_environment_is_respected(self):
+        configured = Path(self.temp_directory.name) / "portable-data"
+        with patch.dict(
+            "os.environ",
+            {"SELF_CARE_DATA_DIR": str(configured)},
+        ):
+            self.assertEqual(Database.default_data_dir(), configured)
 
     def test_frequency_is_persisted_and_drives_attention(self):
         created_at = (

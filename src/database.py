@@ -1,11 +1,14 @@
 
 import sqlite3
+import os
+import shutil
 from contextlib import closing
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 
 class Database:
+    SCHEMA_VERSION = 1
     XP_BY_IMPACT = {
         "Low": 10,
         "Medium": 20,
@@ -25,15 +28,35 @@ class Database:
 
     @staticmethod
     def default_data_dir():
+        configured = os.environ.get("SELF_CARE_DATA_DIR")
+        if configured:
+            return Path(configured).expanduser()
         return Path(__file__).resolve().parent.parent / "data"
 
     def connect(self):
-        connection = sqlite3.connect(self.db_path)
+        connection = sqlite3.connect(self.db_path, timeout=10)
         connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
+        connection.execute("PRAGMA busy_timeout = 10000")
         return connection
 
     def initialize(self):
+        database_exists = self.db_path.exists()
+        if database_exists:
+            self._verify_integrity()
+            self.backup()
+
         with closing(self.connect()) as connection:
+            connection.execute("PRAGMA journal_mode = WAL")
+            schema_version = connection.execute(
+                "PRAGMA user_version"
+            ).fetchone()[0]
+            if schema_version > self.SCHEMA_VERSION:
+                raise sqlite3.DatabaseError(
+                    "Database was created by a newer version of the app. "
+                    "Update the app before opening this data."
+                )
+
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS tasks (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -117,8 +140,38 @@ class Database:
                 "DELETE FROM task_completions WHERE completed_at < ?",
                 (cutoff,)
             )
+            connection.execute(
+                f"PRAGMA user_version = {self.SCHEMA_VERSION}"
+            )
             connection.commit()
         self.reset_expired_tasks()
+
+    def _verify_integrity(self):
+        with closing(self.connect()) as connection:
+            result = connection.execute("PRAGMA quick_check").fetchone()[0]
+        if result != "ok":
+            raise sqlite3.DatabaseError(
+                f"Database integrity check failed: {result}. "
+                "Restore dashboard.db.backup or the most recent backup copy."
+            )
+
+    def backup(self, destination=None):
+        destination = Path(
+            destination or self.db_path.with_name("dashboard.db.backup")
+        )
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        temporary = destination.with_suffix(destination.suffix + ".tmp")
+        temporary.unlink(missing_ok=True)
+
+        with closing(self.connect()) as source:
+            with closing(sqlite3.connect(temporary)) as target:
+                source.backup(target)
+        try:
+            temporary.replace(destination)
+        except OSError:
+            shutil.copy2(temporary, destination)
+            temporary.unlink()
+        return destination
 
     def reset_expired_tasks(self):
         with closing(self.connect()) as connection:

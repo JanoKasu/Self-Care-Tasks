@@ -27,9 +27,9 @@ class CompletionHistoryModel(QAbstractListModel):
     CompletionCountRole = IconRole + 1
     LastCompletedAtRole = CompletionCountRole + 1
 
-    def __init__(self):
+    def __init__(self, database=None):
         super().__init__()
-        self.database = Database()
+        self.database = database or Database()
         self.entries = self.database.get_completion_history()
 
     def roleNames(self):
@@ -92,9 +92,9 @@ class TaskAttentionModel(QAbstractListModel):
     MissedRole = FrequencyRole + 1
     CompletionRateRole = MissedRole + 1
 
-    def __init__(self):
+    def __init__(self, database=None):
         super().__init__()
-        self.database = Database()
+        self.database = database or Database()
         self.entries = self.database.get_attention_tasks()
 
     def roleNames(self):
@@ -162,10 +162,10 @@ class TaskModel(QAbstractListModel):
 
     XP_PER_LEVEL = 100
 
-    def __init__(self, history_model=None, attention_model=None):
+    def __init__(self, history_model=None, attention_model=None, database=None):
         super().__init__()
 
-        self.database = Database()
+        self.database = database or Database()
         self.tasks = self.database.get_tasks()
         self.history_model = history_model
         self.attention_model = attention_model

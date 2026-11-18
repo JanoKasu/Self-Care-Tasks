@@ -60,6 +60,45 @@ If the repository is in a different location, replace both occurrences of
 path to `.venv/bin/python` absolute so autostart does not depend on shell
 activation or `PATH`.
 
+## Data storage and backups
+
+The dashboard stores its SQLite database at `data/dashboard.db`. This directory
+is ignored by Git, so code updates and ordinary Git operations do not overwrite
+your tasks, completion history, or XP.
+
+To keep data outside the source checkout, set `SELF_CARE_DATA_DIR` in the
+autostart command:
+
+```ini
+Exec=env SELF_CARE_DATA_DIR=/home/janokasu/.local/share/self-care-tasks /home/janokasu/Documents/Self-Care-Tasks/.venv/bin/python /home/janokasu/Documents/Self-Care-Tasks/main.py
+```
+
+On each normal startup the app:
+
+1. verifies the database with SQLite's quick integrity check;
+2. refreshes `dashboard.db.backup` with a transactionally consistent copy;
+3. applies any pending schema migration;
+4. keeps SQLite write-ahead logging and foreign-key enforcement enabled.
+
+Copy the database directory to external storage regularly for off-device
+backups. To restore the last automatic backup, close the dashboard, copy
+`dashboard.db.backup` over `dashboard.db`, and reopen the app. Move the original
+corrupted database elsewhere rather than deleting it if recovery is needed.
+
+Do not edit the database while the app is running. If startup reports an
+integrity error, restore a known-good backup before reopening it.
+
+## Development and tests
+
+```bash
+.venv/bin/python -m unittest discover -s tests
+```
+
+Tests use isolated temporary databases and cover task persistence, completion
+periods, XP, migrations, backups, navigation, connectivity, inactivity, and
+application updates. The update controller tests mock Git and pip so test runs
+never modify the checkout or install packages.
+
 ## Update
 
 Click the refresh button at the bottom of the navigation bar. The dashboard

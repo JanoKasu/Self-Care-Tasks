@@ -15,6 +15,7 @@ from src.task_model import (
     TaskModel,
 )
 from src.update_controller import UpdateController
+from src.database import Database
 
 PROJECT_DIR = Path(__file__).resolve().parent
 
@@ -28,9 +29,10 @@ def main():
 
     engine = QQmlApplicationEngine()
 
-    history_model = CompletionHistoryModel()
-    attention_model = TaskAttentionModel()
-    task_model = TaskModel(history_model, attention_model)
+    database = Database()
+    history_model = CompletionHistoryModel(database)
+    attention_model = TaskAttentionModel(database)
+    task_model = TaskModel(history_model, attention_model, database)
     network_controller = NetworkController()
     update_controller = UpdateController(PROJECT_DIR)
     inactivity_controller = InactivityController(timeout_seconds=30)

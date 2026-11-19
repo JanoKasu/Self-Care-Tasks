@@ -58,12 +58,12 @@ need a client secret. Expiring tokens are refreshed automatically and stored
 together in the keyring; if the refresh token expires or is revoked, disconnect
 and sign in again.
 
-The page refuses previously granted extra OAuth scopes and does not display
-contribution calendars that include anonymized private contribution counts.
-If needed, revoke the OAuth app's authorization in GitHub and/or turn off
-private contributions on your GitHub profile, then retry. Disconnect removes
-the local keyring token; revoke the OAuth app in GitHub's authorized
-applications settings as well if you want to invalidate the token remotely.
+The page refuses previously granted extra OAuth scopes. If a user has enabled
+private contribution counts on their GitHub profile, the calendar includes the
+same anonymized aggregate counts, but no private repository names or details
+are requested. Disconnect removes the local keyring token; revoke the OAuth
+app in GitHub's authorized applications settings as well if you want to
+invalidate the token remotely.
 
 All long pages and the navigation rail support touch swiping and visible
 scrollbars when their content exceeds the available display. Controls use

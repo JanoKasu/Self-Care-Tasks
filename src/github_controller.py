@@ -22,7 +22,6 @@ query {
   viewer {
     login
     contributionsCollection {
-      hasAnyRestrictedContributions
       contributionCalendar {
         totalContributions
         weeks { contributionDays { date weekday contributionCount contributionLevel } }
@@ -421,20 +420,11 @@ class GitHubController(QObject):
                     raise ValueError("GraphQL error")
                 viewer = data["data"]["viewer"]
                 collection = viewer["contributionsCollection"]
-                if collection["hasAnyRestrictedContributions"]:
-                    self._login = viewer["login"]
-                    self._weeks = []
-                    self._total = 0
-                    self._status = (
-                        "Your public GitHub profile includes private contribution counts. "
-                        "Turn off private contributions on your GitHub profile to show public-only activity."
-                    )
-                else:
-                    calendar = collection["contributionCalendar"]
-                    self._login = viewer["login"]
-                    self._total = calendar["totalContributions"]
-                    self._weeks = calendar["weeks"]
-                    self._status = "Public contribution activity for the past year."
+                calendar = collection["contributionCalendar"]
+                self._login = viewer["login"]
+                self._total = calendar["totalContributions"]
+                self._weeks = calendar["weeks"]
+                self._status = "Contribution activity for the past year."
             except (KeyError, TypeError, ValueError):
                 self._status = "GitHub could not load contributions. Please try again."
         self.changed.emit()

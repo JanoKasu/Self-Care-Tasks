@@ -246,16 +246,24 @@ class GitHubControllerTests(unittest.TestCase):
         self.assertIn("Disconnect and sign in again", controller.status)
         self.assertFalse(controller.busy)
 
-    def test_private_counts_are_not_displayed(self):
-        self.controller._weeks = [{"contributionDays": []}]
-        self.controller._total = 5
+    def test_anonymized_private_counts_are_displayed(self):
+        calendar = {
+            "totalContributions": 5,
+            "weeks": [{"contributionDays": []}],
+        }
         self.controller._contributions_response({"data": {"viewer": {
             "login": "tester",
-            "contributionsCollection": {"hasAnyRestrictedContributions": True},
+            "contributionsCollection": {
+                "hasAnyRestrictedContributions": True,
+                "contributionCalendar": calendar,
+            },
         }}}, "")
-        self.assertEqual(self.controller.weeks, [])
-        self.assertEqual(self.controller.total, 0)
-        self.assertIn("private contribution", self.controller.status)
+        self.assertEqual(self.controller.weeks, calendar["weeks"])
+        self.assertEqual(self.controller.total, 5)
+        self.assertEqual(
+            self.controller.status,
+            "Contribution activity for the past year.",
+        )
 
     def test_missing_client_id_and_network_errors_are_visible(self):
         self.controller._client_id = ""

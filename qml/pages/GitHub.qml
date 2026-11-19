@@ -118,7 +118,7 @@ Item {
                         }
                         ScrollView {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 108
+                            Layout.preferredHeight: 132
                             contentWidth: graph.implicitWidth
                             contentHeight: graph.implicitHeight
                             clip: true

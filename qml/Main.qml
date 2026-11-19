@@ -55,13 +55,13 @@ ApplicationWindow {
                 anchors.rightMargin: 12
                 anchors.topMargin: 18
                 anchors.bottomMargin: 18
-                spacing: 10
+                spacing: 4
 
                 TabButton {
                     id: homeTab
                     objectName: "homeTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 56
                     checked: navigation.currentIndex === 0
                     hoverEnabled: true
                     Accessible.name: "Home"
@@ -102,7 +102,7 @@ ApplicationWindow {
                     id: dashboardTab
                     objectName: "dashboardTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 56
                     checked: navigation.currentIndex === 1
                     hoverEnabled: true
                     Accessible.name: "Dashboard"
@@ -143,7 +143,7 @@ ApplicationWindow {
                     id: historyTab
                     objectName: "historyTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 56
                     checked: navigation.currentIndex === 2
                     hoverEnabled: true
                     Accessible.name: "Progress"
@@ -184,7 +184,7 @@ ApplicationWindow {
                     id: attentionTab
                     objectName: "attentionTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 56
                     checked: navigation.currentIndex === 3
                     hoverEnabled: true
                     Accessible.name: "Needs attention"
@@ -241,13 +241,51 @@ ApplicationWindow {
                     }
                 }
 
+                TabButton {
+                    id: githubTab
+                    objectName: "githubTab"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 56
+                    checked: navigation.currentIndex === 4
+                    hoverEnabled: true
+                    Accessible.name: "GitHub"
+                    ToolTip.text: "GitHub"
+                    ToolTip.visible: hovered
+                    onClicked: navigation.currentIndex = 4
+
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: githubTab.checked ? AppTheme.Theme.accent : "transparent"
+                        Behavior on color { ColorAnimation { duration: 180 } }
+                    }
+
+                    contentItem: Column {
+                        spacing: 1
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "\u2318"
+                            color: githubTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 26
+                            font.weight: Font.DemiBold
+                        }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "GitHub"
+                            color: githubTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 10
+                            font.weight: Font.DemiBold
+                        }
+                    }
+                }
+
                 Item { Layout.fillHeight: true }
 
                 TabButton {
                     id: updateTab
                     objectName: "updateTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 56
                     hoverEnabled: true
                     Accessible.name: "App updates"
                     ToolTip.text: "App updates"
@@ -313,6 +351,7 @@ ApplicationWindow {
             Dashboard {}
             History {}
             Attention {}
+            GitHub {}
         }
     }
 
@@ -505,10 +544,13 @@ ApplicationWindow {
                     primary: true
                     enabled: !networkController.checking
                              && wifiNetwork.editText.length > 0
-                    onClicked: networkController.connectNetwork(
-                        wifiNetwork.editText,
-                        wifiPassword.text
-                    )
+                    onClicked: {
+                        networkController.connectNetwork(
+                            wifiNetwork.editText,
+                            wifiPassword.text
+                        )
+                        wifiPassword.text = ""
+                    }
                 }
             }
         }

@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
+from PySide6.QtCore import QEvent
 from PySide6.QtGui import QGuiApplication
 
 from src.inactivity_controller import InactivityController
@@ -58,6 +59,26 @@ class InactivityControllerTests(unittest.TestCase):
         self.assertTrue(controller._idle_timer.isSingleShot())
         self.assertEqual(controller._idle_timer.interval(), 7000)
         controller._idle_timer.stop()
+
+    @patch("src.inactivity_controller.QGuiApplication.restoreOverrideCursor")
+    @patch("src.inactivity_controller.QGuiApplication.setOverrideCursor")
+    def test_touch_begin_wakes_without_consuming_flick_sequence(
+        self,
+        set_override_cursor,
+        restore_override_cursor,
+    ):
+        controller = InactivityController(timeout_seconds=30)
+        controller._run_xset = Mock()
+        controller.sleep()
+
+        consumed = controller.eventFilter(
+            controller,
+            QEvent(QEvent.Type.TouchBegin),
+        )
+
+        self.assertFalse(controller.asleep)
+        self.assertFalse(consumed)
+        controller._run_xset.assert_called_with("dpms", "force", "on")
 
 
 if __name__ == "__main__":

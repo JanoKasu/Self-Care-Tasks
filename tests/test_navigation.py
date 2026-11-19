@@ -2,6 +2,7 @@ import os
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
@@ -17,6 +18,7 @@ from src.task_model import (
 from src.network_controller import NetworkController
 from src.update_controller import UpdateController
 from src.inactivity_controller import InactivityController
+from src.github_controller import GitHubController, GitHubQrProvider
 
 
 class NavigationTests(unittest.TestCase):
@@ -24,6 +26,7 @@ class NavigationTests(unittest.TestCase):
     def setUpClass(cls):
         cls.app = QGuiApplication.instance() or QGuiApplication([])
         cls.engine = QQmlApplicationEngine()
+        cls.engine.addImageProvider("github", GitHubQrProvider())
         project_root = Path(__file__).resolve().parent.parent
         cls.history_model = CompletionHistoryModel()
         cls.attention_model = TaskAttentionModel()
@@ -32,6 +35,8 @@ class NavigationTests(unittest.TestCase):
         cls.update_controller = UpdateController(project_root)
         cls.inactivity_controller = InactivityController(timeout_seconds=30)
         cls.inactivity_controller._run_xset = lambda *arguments: None
+        with patch("src.github_controller.QTimer.singleShot"):
+            cls.github_controller = GitHubController()
         cls.engine.rootContext().setContextProperty("taskModel", cls.task_model)
         cls.engine.rootContext().setContextProperty(
             "historyModel",
@@ -53,6 +58,10 @@ class NavigationTests(unittest.TestCase):
             "inactivityController",
             cls.inactivity_controller
         )
+        cls.engine.rootContext().setContextProperty(
+            "githubController",
+            cls.github_controller
+        )
 
         cls.engine.load(str(project_root / "qml" / "Main.qml"))
         cls.root_objects = cls.engine.rootObjects()
@@ -72,7 +81,7 @@ class NavigationTests(unittest.TestCase):
         page_stack = self.root_objects[0].findChild(QObject, "pageStack")
         self.assertIsNotNone(page_stack)
 
-        for index in (0, 1, 2, 3):
+        for index in (0, 1, 2, 3, 4):
             navigation.setProperty("currentIndex", index)
             self.app.processEvents()
             self.assertEqual(navigation.property("currentIndex"), index)
@@ -105,6 +114,63 @@ class NavigationTests(unittest.TestCase):
         self.inactivity_controller.wake()
         self.app.processEvents()
         self.assertFalse(dimmer.property("visible"))
+
+    def test_github_page_renders_calendar(self):
+        self.navigation.setProperty("currentIndex", 4)
+        controller = self.github_controller
+        controller._token = "test-token"
+        controller._contributions_response({
+            "data": {"viewer": {
+                "login": "tester",
+                "contributionsCollection": {
+                    "hasAnyRestrictedContributions": False,
+                    "contributionCalendar": {
+                        "totalContributions": 3,
+                        "weeks": [{"contributionDays": [{
+                            "date": "2026-01-05", "weekday": 1,
+                            "contributionCount": 3,
+                            "contributionLevel": "SECOND_QUARTILE",
+                        }]}],
+                    },
+                },
+            }},
+        }, "")
+        self.app.processEvents()
+        page = self.root_objects[0].findChild(QObject, "githubPage")
+        self.assertIsNotNone(page)
+        def visual_children(item):
+            children = item.childItems()
+            return children + [
+                descendant
+                for child in children
+                for descendant in visual_children(child)
+            ]
+
+        days = [
+            item for item in visual_children(page)
+            if item.objectName() == "contributionDay"
+        ]
+        self.assertEqual(len(days), 7)
+        self.assertEqual(days[1].property("day")["contributionCount"], 3)
+        controller._token = ""
+        controller._weeks = []
+        controller._login = ""
+        controller.changed.emit()
+
+    def test_github_signin_shows_local_qr_and_code(self):
+        self.navigation.setProperty("currentIndex", 4)
+        controller = self.github_controller
+        controller._user_code = "ABCD-1234"
+        controller._busy = True
+        controller.changed.emit()
+        self.app.processEvents()
+        qr = self.root_objects[0].findChild(QObject, "githubQr")
+        self.assertIsNotNone(qr)
+        self.assertTrue(qr.property("visible"))
+        self.assertEqual(qr.property("source").toString(), "image://github/qr")
+        controller._user_code = ""
+        controller._busy = False
+        controller.changed.emit()
 
     def test_theme_uses_dark_mode_between_eight_pm_and_six_am(self):
         project_root = Path(__file__).resolve().parent.parent

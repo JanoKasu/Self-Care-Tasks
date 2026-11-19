@@ -31,6 +31,31 @@ requests display power-off through X11 DPMS. Touch, mouse, or keyboard input
 restores the display; DPMS power saving requires `xset` and a compatible
 display session.
 
+## GitHub contributions
+
+The GitHub page shows a rolling year of public contribution activity. It
+refreshes on startup and every 15 minutes, and can also be refreshed manually.
+Open GitHub in the dashboard, tap Connect, scan the QR code on your phone,
+and enter the displayed code at GitHub. Sign in with your own GitHub account.
+The token is saved in the desktop's system keyring, not in the database. The
+Raspberry Pi desktop needs an unlocked Secret Service keyring (for example
+GNOME Keyring) to persist it.
+
+The project provides a public OAuth client ID, so no app registration is
+necessary. To use your own [OAuth app](https://github.com/settings/applications/new)
+instead, enable **Device Flow** and set `SELF_CARE_GITHUB_CLIENT_ID` before
+starting the dashboard. The dashboard requests no OAuth scopes and does not
+need a client secret. Expiring tokens are refreshed automatically and stored
+together in the keyring; if the refresh token expires or is revoked, disconnect
+and sign in again.
+
+The page refuses previously granted extra OAuth scopes and does not display
+contribution calendars that include anonymized private contribution counts.
+If needed, revoke the OAuth app's authorization in GitHub and/or turn off
+private contributions on your GitHub profile, then retry. Disconnect removes
+the local keyring token; revoke the OAuth app in GitHub's authorized
+applications settings as well if you want to invalidate the token remotely.
+
 ## Install on Raspberry Pi OS
 
 ```bash
@@ -38,7 +63,8 @@ cd "$HOME/Documents/Self-Care-Tasks"
 sudo apt update
 sudo apt install -y python3-venv python3-pip \
   libegl1 libgl1 libgbm1 libxkbcommon0 libxcb-cursor0 \
-  libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils network-manager
+  libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils network-manager \
+  gnome-keyring
 
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
@@ -118,19 +144,36 @@ never modify the checkout or install packages.
 
 ## Update
 
+Automatic updates are fail-closed. Configure
+`SELF_CARE_UPDATE_ALLOWED_SIGNERS` to point to a Git SSH allowed-signers file
+stored outside this checkout, for example:
+
+```text
+release-signer@example.com ssh-ed25519 AAAAC3... release signing key
+```
+
+The principal must match the committer identity on the signed release commit.
+Keep the allowed-signers file under the application user's private home
+directory. Do not add it to the repository.
+
 Click the refresh button at the bottom of the navigation bar. The dashboard
-checks the tracked Git branch, downloads a fast-forward-only update, refreshes
-Python dependencies if `requirements.txt` changed, and then offers to restart.
-Your ignored `data/dashboard.db` file is not changed.
+only accepts a fast-forward update from the official `origin` URL when the
+candidate commit has a trusted SSH signature. It re-verifies that commit
+immediately before merging and restarting. Your ignored `data/dashboard.db`
+file is not changed.
 
 Automatic updates require a clean checkout. Commit, stash, or discard tracked
-local changes before using the update button.
+local changes before using the update button. If `requirements.txt` changes,
+the update is refused rather than executing an unreviewed package installation.
 
-For a command-line update, close the running application and run:
+To install a release that changes dependencies, close the application, review
+the signed commit and its dependency diff, then install the dependencies in the
+virtual environment only after verifying the package artifacts are appropriate
+for the device. Complete the command-line update with:
 
 ```bash
 cd "$HOME/Documents/Self-Care-Tasks"
-git pull
+git merge --ff-only origin/main
 .venv/bin/python -m pip install -r requirements.txt
 ```
 

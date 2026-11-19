@@ -1,4 +1,6 @@
+import os
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -17,18 +19,31 @@ def command(returncode=0, stdout="", stderr=""):
 
 class UpdateControllerTests(unittest.TestCase):
     def setUp(self):
-        self.controller = UpdateController(Path(__file__).resolve().parent.parent)
+        self.project_dir = Path(__file__).resolve().parent.parent
+        self.signers_dir = tempfile.TemporaryDirectory()
+        self.signers_file = Path(self.signers_dir.name) / "allowed_signers"
+        self.signers_file.write_text(
+            "release@example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAITest\n",
+            encoding="utf-8",
+        )
+        self.environment = patch.dict(
+            os.environ,
+            {"SELF_CARE_UPDATE_ALLOWED_SIGNERS": str(self.signers_file)},
+        )
+        self.environment.start()
+        self.controller = UpdateController(self.project_dir)
+
+    def tearDown(self):
+        self.environment.stop()
+        self.signers_dir.cleanup()
 
     def test_check_reports_available_updates(self):
-        self.controller._run_git = Mock(
-            side_effect=[
-                command(),
-                command(stdout="origin/main\n"),
-                command(stdout="local\n"),
-                command(stdout="remote\n"),
-                command(stdout="2\n"),
-            ]
+        local = "a" * 40
+        remote = "b" * 40
+        self.controller._resolve_update_candidate = Mock(
+            return_value=(local, remote)
         )
+        self.controller._run_git = Mock(return_value=command(stdout="2\n"))
 
         self.controller._check_for_updates()
 
@@ -37,15 +52,11 @@ class UpdateControllerTests(unittest.TestCase):
         self.assertFalse(self.controller.busy)
 
     def test_check_reports_up_to_date_checkout(self):
-        self.controller._run_git = Mock(
-            side_effect=[
-                command(),
-                command(stdout="origin/main\n"),
-                command(stdout="same\n"),
-                command(stdout="same\n"),
-                command(stdout="0\n"),
-            ]
+        revision = "a" * 40
+        self.controller._resolve_update_candidate = Mock(
+            return_value=(revision, revision)
         )
+        self.controller._run_git = Mock(return_value=command(stdout="0\n"))
 
         self.controller._check_for_updates()
 
@@ -64,13 +75,58 @@ class UpdateControllerTests(unittest.TestCase):
             "status", "--porcelain", "--untracked-files=no"
         )
 
-    @patch("src.update_controller.subprocess.run")
-    def test_apply_installs_dependencies_when_requirements_change(self, run):
-        run.return_value = command()
+    def test_candidate_must_come_from_trusted_remote_and_signed_commit(self):
+        local = "a" * 40
+        remote = "b" * 40
+        self.controller._run_git = Mock(
+            side_effect=[
+                command(
+                    stdout="https://github.com/JanoKasu/Self-Care-Tasks.git\n"
+                ),
+                command(),
+                command(stdout="origin/main\n"),
+                command(stdout=local + "\n"),
+                command(stdout=remote + "\n"),
+                command(),
+            ]
+        )
+
+        self.assertEqual(
+            self.controller._resolve_update_candidate(),
+            (local, remote),
+        )
+        verify_call = self.controller._run_git.call_args_list[-1]
+        self.assertIn("verify-commit", verify_call.args)
+        self.assertIn(remote, verify_call.args)
+
+    def test_candidate_rejects_unsigned_commit(self):
+        local = "a" * 40
+        remote = "b" * 40
+        self.controller._run_git = Mock(
+            side_effect=[
+                command(
+                    stdout="https://github.com/JanoKasu/Self-Care-Tasks.git\n"
+                ),
+                command(),
+                command(stdout="origin/main\n"),
+                command(stdout=local + "\n"),
+                command(stdout=remote + "\n"),
+                command(returncode=1, stderr="No principal matched"),
+            ]
+        )
+
+        self.assertIsNone(self.controller._resolve_update_candidate())
+        self.assertIn("trusted signature", self.controller.status)
+
+    def test_apply_refuses_dependency_changes_before_checkout(self):
+        local = "a" * 40
+        remote = "b" * 40
+        self.controller._resolve_update_candidate = Mock(
+            return_value=(local, remote)
+        )
         self.controller._run_git = Mock(
             side_effect=[
                 command(),
-                command(stdout="old-revision\n"),
                 command(),
                 command(returncode=1),
             ]
@@ -78,31 +134,37 @@ class UpdateControllerTests(unittest.TestCase):
 
         self.controller._apply_update()
 
-        self.assertIn("pip", run.call_args.args[0])
-        self.assertTrue(run.call_args.args[0][-1].endswith("requirements.txt"))
-        self.assertEqual(
-            self.controller.status,
-            "Update complete. Restart to use the new version.",
+        self.assertIn("requirements changed", self.controller.status)
+        self.assertNotIn(
+            "merge",
+            [call.args[0] for call in self.controller._run_git.call_args_list],
         )
 
-    @patch("src.update_controller.subprocess.run")
-    def test_apply_retries_dependencies_after_an_install_failure(self, run):
-        self.controller._dependencies_pending = True
-        run.return_value = command()
+    def test_apply_merges_verified_revision_without_running_pip(self):
+        local = "a" * 40
+        remote = "b" * 40
+        self.controller._resolve_update_candidate = Mock(
+            return_value=(local, remote)
+        )
         self.controller._run_git = Mock(
             side_effect=[
                 command(),
-                command(stdout="current-revision\n"),
                 command(),
-                command(returncode=0),
+                command(),
+                command(),
             ]
         )
 
         self.controller._apply_update()
 
-        run.assert_called_once()
-        self.assertFalse(self.controller._dependencies_pending)
-        self.assertTrue(self.controller.status.startswith("Update complete"))
+        self.assertEqual(
+            self.controller._run_git.call_args.args,
+            ("merge", "--ff-only", remote),
+        )
+        self.assertEqual(
+            self.controller.status,
+            "Update complete. Restart to use the new version.",
+        )
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from src.network_controller import NetworkController
 
@@ -61,3 +61,39 @@ class NetworkControllerTests(unittest.TestCase):
             self.assertTrue(
                 self.controller.ensureProfileAutoconnect("Home Wi-Fi")
             )
+
+    def test_connect_passes_wifi_password_only_on_stdin(self):
+        self.controller._nmcli = "nmcli"
+        password = "secret-password"
+        command_result = Mock(returncode=1, stdout="", stderr="authentication failed")
+
+        with patch(
+            "src.network_controller.subprocess.run",
+            return_value=command_result,
+        ) as run:
+            self.assertFalse(
+                self.controller.connectNetwork("Home Wi-Fi", password)
+            )
+
+        arguments = run.call_args.args[0]
+        self.assertNotIn(password, arguments)
+        self.assertEqual(run.call_args.kwargs["input"], password + "\n")
+        self.assertIn("--ask", arguments)
+
+    def test_connect_redacts_wifi_password_from_error_output(self):
+        self.controller._nmcli = "nmcli"
+        password = "secret-password"
+        command_result = Mock(
+            returncode=1,
+            stdout="",
+            stderr=f"nmcli rejected {password}",
+        )
+
+        with patch(
+            "src.network_controller.subprocess.run",
+            return_value=command_result,
+        ):
+            self.controller.connectNetwork("Home Wi-Fi", password)
+
+        self.assertNotIn(password, self.controller.status)
+        self.assertIn("[redacted]", self.controller.status)

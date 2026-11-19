@@ -8,6 +8,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 from src.inactivity_controller import InactivityController
+from src.github_controller import GitHubController, GitHubQrProvider
 from src.network_controller import NetworkController
 from src.task_model import (
     CompletionHistoryModel,
@@ -28,6 +29,7 @@ def main():
     app = QGuiApplication(sys.argv)
 
     engine = QQmlApplicationEngine()
+    engine.addImageProvider("github", GitHubQrProvider())
 
     database = Database()
     history_model = CompletionHistoryModel(database)
@@ -36,6 +38,7 @@ def main():
     network_controller = NetworkController()
     update_controller = UpdateController(PROJECT_DIR)
     inactivity_controller = InactivityController(timeout_seconds=30)
+    github_controller = GitHubController()
     app.installEventFilter(inactivity_controller)
 
     engine.rootContext().setContextProperty(
@@ -61,6 +64,10 @@ def main():
     engine.rootContext().setContextProperty(
         "updateController",
         update_controller
+    )
+    engine.rootContext().setContextProperty(
+        "githubController",
+        github_controller
     )
 
     engine.load(str(resource_path("qml", "Main.qml")))

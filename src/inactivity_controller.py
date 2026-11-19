@@ -106,6 +106,10 @@ class InactivityController(QObject):
 
         if self._asleep and event_type in self.WAKE_EVENTS:
             self.wake()
+            # Keep a touch sequence intact so the same gesture can wake the
+            # display and continue into a Flickable.
+            if event_type == QEvent.Type.TouchBegin:
+                return False
             return True
 
         if not self._asleep:

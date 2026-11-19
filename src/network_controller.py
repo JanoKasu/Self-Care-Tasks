@@ -42,6 +42,13 @@ class NetworkController(QObject):
             self._status = status
             self.statusChanged.emit()
 
+    def _safe_error(self, result, fallback, secrets=()):
+        message = result.stderr.strip() or result.stdout.strip() or fallback
+        for secret in secrets:
+            if secret:
+                message = message.replace(secret, "[redacted]")
+        return message
+
     def internet_is_available(self, host="1.1.1.1", port=53, timeout=3):
         try:
             with socket.create_connection((host, port), timeout=timeout):
@@ -135,25 +142,29 @@ class NetworkController(QObject):
             result = subprocess.run(
                 [
                     self._nmcli,
+                    "--ask",
                     "dev",
                     "wifi",
                     "connect",
                     ssid,
-                    "password",
-                    password,
                 ],
                 check=False,
                 timeout=30,
                 capture_output=True,
                 text=True,
+                input=password + "\n",
             )
         except (OSError, subprocess.SubprocessError) as error:
-            self.set_status("Unable to connect: " + str(error))
+            self.set_status("Unable to connect to the Wi-Fi network.")
             return False
 
         if result.returncode != 0:
             self.set_status(
-                result.stderr.strip() or "Wi-Fi connection failed."
+                self._safe_error(
+                    result,
+                    "Wi-Fi connection failed.",
+                    (password,),
+                )
             )
             return False
 

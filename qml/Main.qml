@@ -46,22 +46,26 @@ ApplicationWindow {
                 }
             }
 
-            ColumnLayout {
+            ScrollView {
+                id: navigationScroll
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                anchors.topMargin: 18
-                anchors.bottomMargin: 18
-                spacing: 10
+                anchors.margins: 10
+                clip: true
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+                ColumnLayout {
+                    width: navigationScroll.availableWidth
+                    spacing: 6
 
                 TabButton {
                     id: homeTab
                     objectName: "homeTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 0
                     hoverEnabled: true
                     Accessible.name: "Home"
@@ -102,7 +106,7 @@ ApplicationWindow {
                     id: dashboardTab
                     objectName: "dashboardTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 1
                     hoverEnabled: true
                     Accessible.name: "Dashboard"
@@ -143,7 +147,7 @@ ApplicationWindow {
                     id: historyTab
                     objectName: "historyTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 2
                     hoverEnabled: true
                     Accessible.name: "Progress"
@@ -184,7 +188,7 @@ ApplicationWindow {
                     id: attentionTab
                     objectName: "attentionTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 3
                     hoverEnabled: true
                     Accessible.name: "Needs attention"
@@ -245,7 +249,7 @@ ApplicationWindow {
                     id: weatherTab
                     objectName: "weatherTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 4
                     hoverEnabled: true
                     Accessible.name: "Weather"
@@ -288,7 +292,7 @@ ApplicationWindow {
                     id: updateTab
                     objectName: "updateTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 60
+                    Layout.preferredHeight: 54
                     hoverEnabled: true
                     Accessible.name: "App updates"
                     ToolTip.text: "App updates"
@@ -334,6 +338,7 @@ ApplicationWindow {
                         anchors.topMargin: 8
                     }
                 }
+                }
             }
         }
 
@@ -361,7 +366,6 @@ ApplicationWindow {
     AppDialog {
         id: updateDialog
         objectName: "updateDialog"
-        anchors.centerIn: parent
         title: "App updates"
         icon: "\u21BB"
         subtitle: "Keep the dashboard current without rebuilding it."

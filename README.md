@@ -35,12 +35,18 @@ The dashboard switches to its dark theme automatically from 8:00 PM until
 6:00 AM, using the device's local time. It schedules a timer for the next
 switch and emits `Theme.themeChanged(darkMode)` when the mode changes.
 
+All long pages and the navigation rail support touch swiping and visible
+scrollbars when their content exceeds the available display. Controls use
+large touch targets and switch to compact spacing on smaller Raspberry Pi
+screens.
+
 ## Install on Raspberry Pi OS
 
 ```bash
 cd "$HOME/Documents/Self-Care-Tasks"
 sudo apt update
 sudo apt install -y python3-venv python3-pip \
+  fonts-noto-color-emoji \
   libegl1 libgl1 libgbm1 libxkbcommon0 libxcb-cursor0 \
   libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils
 

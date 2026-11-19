@@ -17,16 +17,19 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
+        anchors.margins: root.width < 560 ? 16 : 24
         spacing: 16
 
         RowLayout {
             Layout.fillWidth: true
 
             ColumnLayout {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
                 spacing: 3
 
                 Text {
+                    Layout.fillWidth: true
                     text: weatherController.hasLocation
                           ? weatherController.locationName
                           : "Weather"
@@ -58,6 +61,8 @@ Item {
 
             ActionButton {
                 text: "↻"
+                Layout.preferredWidth: 52
+                Layout.minimumWidth: 52
                 visible: weatherController.hasLocation
                 enabled: !weatherController.busy
                 Accessible.name: "Refresh weather"
@@ -123,28 +128,34 @@ Item {
         }
 
         ScrollView {
+            id: weatherScroll
+            objectName: "weatherScroll"
             visible: weatherController.hasLocation
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            contentWidth: availableWidth
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
             ColumnLayout {
-                width: parent.width
+                width: weatherScroll.availableWidth
                 spacing: 14
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 158
+                    Layout.preferredHeight: root.width < 560 ? 238 : 158
                     radius: AppTheme.Theme.radiusLarge
                     color: AppTheme.Theme.surface
                     border.width: 1
                     border.color: AppTheme.Theme.divider
 
-                    RowLayout {
+                    GridLayout {
                         anchors.fill: parent
                         anchors.margins: 20
-                        spacing: 20
+                        columns: root.width < 560 ? 2 : 3
+                        rowSpacing: 10
+                        columnSpacing: 16
 
                         Text {
                             text: weatherController.current.icon || "🌡"
@@ -152,7 +163,7 @@ Item {
                         }
 
                         ColumnLayout {
-                            Layout.preferredWidth: 150
+                            Layout.fillWidth: true
                             spacing: 1
 
                             Text {
@@ -179,31 +190,29 @@ Item {
                             }
                         }
 
-                        Rectangle {
-                            width: 1
-                            Layout.fillHeight: true
-                            color: AppTheme.Theme.divider
-                        }
-
                         GridLayout {
+                            Layout.columnSpan: root.width < 560 ? 2 : 1
                             Layout.fillWidth: true
-                            columns: 2
+                            columns: root.width < 560 ? 3 : 2
                             rowSpacing: 12
-                            columnSpacing: 24
+                            columnSpacing: 14
 
                             WeatherMetric {
+                                Layout.fillWidth: true
                                 icon: "💧"
                                 label: "Humidity"
                                 value: (weatherController.current.humidity || 0) + "%"
                             }
 
                             WeatherMetric {
+                                Layout.fillWidth: true
                                 icon: "🌧"
                                 label: "Rain now"
                                 value: (weatherController.current.precipitation || 0) + " in"
                             }
 
                             WeatherMetric {
+                                Layout.fillWidth: true
                                 icon: "💨"
                                 label: "Wind"
                                 value: (weatherController.current.windSpeed || 0) + " mph"
@@ -219,17 +228,22 @@ Item {
                     font.bold: true
                 }
 
-                RowLayout {
+                ListView {
                     Layout.fillWidth: true
+                    Layout.preferredHeight: 116
+                    model: weatherController.hourly
+                    orientation: ListView.Horizontal
                     spacing: 8
+                    clip: true
+                    flickableDirection: Flickable.HorizontalFlick
 
-                    Repeater {
-                        model: weatherController.hourly
+                    ScrollBar.horizontal: ScrollBar {
+                        policy: ScrollBar.AsNeeded
+                    }
 
-                        delegate: Rectangle {
-                            Layout.fillWidth: true
-                            Layout.minimumWidth: 62
-                            Layout.preferredHeight: 108
+                    delegate: Rectangle {
+                            width: 72
+                            height: 108
                             radius: 16
                             color: AppTheme.Theme.surface
                             border.width: 1
@@ -266,7 +280,6 @@ Item {
                                     text: modelData.precipitation + "%"
                                     color: AppTheme.Theme.accent
                                     font.pixelSize: 10
-                                }
                             }
                         }
                     }
@@ -341,8 +354,7 @@ Item {
     AppDialog {
         id: locationDialog
         objectName: "weatherLocationDialog"
-        anchors.centerIn: parent
-        width: Math.min(root.width - 40, 560)
+        width: Math.min(root.width - 24, 560)
         title: "Choose your city"
         icon: "⌖"
         subtitle: "The location is stored only on this device."
@@ -389,19 +401,34 @@ Item {
                 wrapMode: Text.WordWrap
             }
 
-            Repeater {
-                model: weatherController.searchResults
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Math.min(
+                    root.height - 360,
+                    240
+                )
+                clip: true
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
-                delegate: ActionButton {
-                    Layout.fillWidth: true
-                    text: modelData.displayName
-                    onClicked: {
-                        weatherController.selectLocation(
-                            modelData.latitude,
-                            modelData.longitude,
-                            modelData.displayName
-                        )
-                        locationDialog.accept()
+                ColumnLayout {
+                    width: parent.availableWidth
+                    spacing: 8
+
+                    Repeater {
+                        model: weatherController.searchResults
+
+                        delegate: ActionButton {
+                            Layout.fillWidth: true
+                            text: modelData.displayName
+                            onClicked: {
+                                weatherController.selectLocation(
+                                    modelData.latitude,
+                                    modelData.longitude,
+                                    modelData.displayName
+                                )
+                                locationDialog.accept()
+                            }
+                        }
                     }
                 }
             }

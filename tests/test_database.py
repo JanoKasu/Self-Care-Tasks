@@ -482,6 +482,24 @@ class DatabaseTests(unittest.TestCase):
         self.assertFalse(result)
         self.assertEqual(model.count, 0)
 
+    def test_task_model_assigns_random_emoji_when_icon_is_blank(self):
+        model = TaskModel(database=self.database)
+
+        self.assertTrue(model.addTask(
+            "Choose an icon",
+            "",
+            "Health",
+            "#ffffff",
+            "Low",
+            "",
+        ))
+
+        task_icon = model.data(
+            model.index(0, 0),
+            TaskModel.IconRole,
+        )
+        self.assertIn(task_icon, model.TASK_EMOJIS)
+
     def test_task_model_deletion_refreshes_completion_history(self):
         import src.task_model as task_model_module
 

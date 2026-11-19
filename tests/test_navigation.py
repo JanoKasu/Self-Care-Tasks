@@ -88,6 +88,35 @@ class NavigationTests(unittest.TestCase):
         self.app.processEvents()
         self.assertEqual(weather_tab.property("checked"), True)
 
+    def test_progress_stats_fill_the_available_page_width(self):
+        self.navigation.setProperty("currentIndex", 2)
+        self.app.processEvents()
+
+        stats_grid = self.root_objects[0].findChild(QObject, "statsGrid")
+
+        self.assertIsNotNone(stats_grid)
+        self.assertGreater(stats_grid.property("width"), 350)
+
+    def test_weather_content_scrolls_at_full_page_width(self):
+        self.weather_controller._has_location = True
+        self.weather_controller.changed.emit()
+        self.navigation.setProperty("currentIndex", 4)
+        self.app.processEvents()
+
+        weather_scroll = self.root_objects[0].findChild(
+            QObject,
+            "weatherScroll",
+        )
+
+        self.assertIsNotNone(weather_scroll)
+        self.assertGreater(weather_scroll.property("availableWidth"), 500)
+        self.assertGreaterEqual(
+            weather_scroll.property("contentWidth"),
+            weather_scroll.property("availableWidth") - 1,
+        )
+        self.weather_controller._has_location = False
+        self.weather_controller.changed.emit()
+
     def test_added_task_is_instantiated_as_a_task_card(self):
         title = "Regression test task"
         self.task_model.addTaskWithFrequency(

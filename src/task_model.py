@@ -1,5 +1,6 @@
 
 from datetime import datetime, timedelta, timezone
+import random
 
 from PySide6.QtCore import (
     QAbstractListModel,
@@ -162,6 +163,24 @@ class TaskModel(QAbstractListModel):
     DurationStartedAtRole = IdRole + 11
 
     XP_PER_LEVEL = 100
+    TASK_EMOJIS = (
+        "🌿",
+        "💧",
+        "🧘",
+        "🚶",
+        "🍎",
+        "🌞",
+        "🛁",
+        "🦷",
+        "📖",
+        "😴",
+        "🧹",
+        "🫶",
+        "🎨",
+        "🌙",
+        "🫧",
+        "☀️",
+    )
 
     def __init__(self, history_model=None, attention_model=None, database=None):
         super().__init__()
@@ -409,6 +428,8 @@ class TaskModel(QAbstractListModel):
             return False
 
         now = datetime.now(timezone.utc).isoformat()
+        if not icon.strip():
+            icon = random.choice(self.TASK_EMOJIS)
         task_id = self.database.add_task(
             title,
             description.strip(),

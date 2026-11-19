@@ -17,7 +17,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
+        anchors.margins: root.width < 560 ? 16 : 24
         spacing: 18
 
         RowLayout {
@@ -139,12 +139,14 @@ Item {
                 }
 
                 Rectangle {
+                    visible: root.width >= 560
                     Layout.preferredWidth: 1
                     Layout.fillHeight: true
                     color: AppTheme.Theme.divider
                 }
 
                 ColumnLayout {
+                    visible: root.width >= 560
                     Layout.preferredWidth: 190
                     spacing: 7
 
@@ -225,7 +227,7 @@ Item {
                         durationStartedAt: model.durationStartedAt
 
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 156
+                        Layout.preferredHeight: 188
 
                         onCompletionRequested: function(isCompleted) {
                             taskModel.setCompleted(
@@ -334,7 +336,6 @@ Item {
     AppDialog {
         id: deleteTaskDialog
         objectName: "deleteTaskDialog"
-        anchors.centerIn: parent
         width: Math.min(root.width - 40, 460)
         title: "Delete this task?"
         icon: "×"
@@ -377,7 +378,6 @@ Item {
     AppDialog {
         id: addTaskDialog
         objectName: "addTaskDialog"
-        anchors.centerIn: parent
         width: Math.min(root.width - 40, 600)
         title: "Add a self-care task"
         icon: "+"
@@ -405,9 +405,15 @@ Item {
             }
         }
 
-        ColumnLayout {
-            width: parent.width
-            spacing: 12
+        ScrollView {
+            anchors.fill: parent
+            clip: true
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+            ColumnLayout {
+                width: parent.availableWidth
+                spacing: 12
 
             RowLayout {
                 Layout.fillWidth: true
@@ -543,6 +549,7 @@ Item {
                     font.weight: Font.DemiBold
                 }
             }
+            }
         }
 
         onOpened: titleField.forceActiveFocus()
@@ -553,7 +560,7 @@ Item {
                     "Anytime",
                     AppTheme.Theme.taskMint,
                     impactField.currentText,
-                    "🌿",
+                    "",
                     frequencyField.currentText)) {
                 titleField.text = ""
                 descriptionField.text = ""

@@ -13,7 +13,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
+        anchors.margins: root.width < 560 ? 16 : 24
         spacing: 18
 
         RowLayout {
@@ -63,6 +63,7 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
             ColumnLayout {
@@ -94,6 +95,7 @@ Item {
                                 Text {
                                     anchors.centerIn: parent
                                     text: model.taskIcon
+                                    font.family: "Noto Color Emoji"
                                     font.pixelSize: 27
                                 }
                             }

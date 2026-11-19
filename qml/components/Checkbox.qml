@@ -17,6 +17,7 @@ Item {
     property string accessibleName: "Mark complete"
 
     signal toggled(bool checked)
+    signal longPressed()
 
     implicitWidth: Math.max(boxSize, 56)
     implicitHeight: Math.max(boxSize, 56)
@@ -81,7 +82,23 @@ Item {
 
     TapHandler {
         id: tapHandler
-        onTapped: root.toggled(!root.checked)
+        property bool holdTriggered: false
+
+        onTapped: {
+            if (holdTriggered) {
+                holdTriggered = false
+                return
+            }
+            root.toggled(!root.checked)
+        }
+        onLongPressed: {
+            holdTriggered = true
+            root.longPressed()
+        }
+        onPressedChanged: {
+            if (pressed)
+                holdTriggered = false
+        }
     }
 
     Keys.onPressed: function(event) {

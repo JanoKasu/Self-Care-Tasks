@@ -18,6 +18,7 @@ Rectangle {
 
     // Task metadata
     property string createdAt: ""
+    property string durationStartedAt: createdAt
     property string durationOnBoard: "0m"
     property string impact: "High"
     property string frequency: "Daily"
@@ -28,6 +29,7 @@ Rectangle {
     property bool completed: false
 
     signal completionRequested(bool completed)
+    signal deleteRequested()
 
     implicitWidth: 350
     implicitHeight: 156
@@ -62,10 +64,10 @@ Rectangle {
                     : AppTheme.Theme.impactLow
 
     function refreshDuration() {
-        if (!createdAt)
+        if (!durationStartedAt)
             return
 
-        var created = new Date(createdAt)
+        var created = new Date(durationStartedAt)
         if (isNaN(created.getTime()))
             return
 
@@ -82,7 +84,7 @@ Rectangle {
         durationOnBoard = hours + "h " + minutes + "m"
     }
 
-    onCreatedAtChanged: refreshDuration()
+    onDurationStartedAtChanged: refreshDuration()
 
     Timer {
         interval: 60000
@@ -150,6 +152,8 @@ Rectangle {
                 spacing: 6
 
                 InfoPill {
+                    objectName: "durationPill"
+                    visible: !root.completed
                     icon: "◷"
                     text: root.durationOnBoard
                     accentColor: AppTheme.Theme.accent
@@ -203,6 +207,8 @@ Rectangle {
                 root.completed = isChecked
                 root.completionRequested(isChecked)
             }
+
+            onLongPressed: root.deleteRequested()
         }
     }
 }

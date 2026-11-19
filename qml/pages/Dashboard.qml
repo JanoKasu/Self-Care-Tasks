@@ -222,6 +222,7 @@ Item {
                         backgroundColor: model.backgroundColor
                         completed: model.completed
                         createdAt: model.createdAt
+                        durationStartedAt: model.durationStartedAt
 
                         Layout.fillWidth: true
                         Layout.preferredHeight: 156
@@ -231,6 +232,12 @@ Item {
                                 model.taskId,
                                 isCompleted
                             )
+                        }
+
+                        onDeleteRequested: {
+                            root.pendingDeleteTaskId = model.taskId
+                            root.pendingDeleteTaskTitle = model.title
+                            deleteTaskDialog.open()
                         }
                     }
                 }
@@ -311,6 +318,8 @@ Item {
 
     property int rewardPoints: 0
     property bool leveledUp: false
+    property int pendingDeleteTaskId: -1
+    property string pendingDeleteTaskTitle: ""
 
     Connections {
         target: taskModel
@@ -319,6 +328,49 @@ Item {
             root.leveledUp = isLevelUp
             rewardToast.visible = true
             rewardTimer.restart()
+        }
+    }
+
+    AppDialog {
+        id: deleteTaskDialog
+        objectName: "deleteTaskDialog"
+        anchors.centerIn: parent
+        width: Math.min(root.width - 40, 460)
+        title: "Delete this task?"
+        icon: "×"
+        subtitle: "This will permanently remove the task and its completion history."
+
+        Text {
+            width: parent.width
+            text: '"' + root.pendingDeleteTaskTitle + '" will be deleted.'
+            color: AppTheme.Theme.textSecondary
+            font.pixelSize: 15
+            wrapMode: Text.WordWrap
+        }
+
+        footer: Item {
+            implicitHeight: 68
+
+            RowLayout {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: 24
+                spacing: 10
+
+                ActionButton {
+                    text: "Cancel"
+                    onClicked: deleteTaskDialog.reject()
+                }
+
+                ActionButton {
+                    text: "Delete"
+                    primary: true
+                    onClicked: {
+                        taskModel.deleteTask(root.pendingDeleteTaskId)
+                        deleteTaskDialog.accept()
+                    }
+                }
+            }
         }
     }
 

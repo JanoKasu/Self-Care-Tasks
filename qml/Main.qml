@@ -241,6 +241,47 @@ ApplicationWindow {
                     }
                 }
 
+                TabButton {
+                    id: weatherTab
+                    objectName: "weatherTab"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 60
+                    checked: navigation.currentIndex === 4
+                    hoverEnabled: true
+                    Accessible.name: "Weather"
+                    ToolTip.text: "Weather"
+                    ToolTip.visible: hovered
+                    onClicked: navigation.currentIndex = 4
+
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: weatherTab.checked ? AppTheme.Theme.accent : "transparent"
+
+                        Behavior on color { ColorAnimation { duration: 180 } }
+                    }
+
+                    contentItem: Column {
+                        spacing: 1
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "\u2600"
+                            color: weatherTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 25
+                            font.weight: Font.DemiBold
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Weather"
+                            color: weatherTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 9
+                            font.weight: Font.DemiBold
+                        }
+                    }
+                }
+
                 Item { Layout.fillHeight: true }
 
                 TabButton {
@@ -313,6 +354,7 @@ ApplicationWindow {
             Dashboard {}
             History {}
             Attention {}
+            Weather {}
         }
     }
 

@@ -184,7 +184,9 @@ class Database:
             expired_ids = [
                 task["id"]
                 for task in tasks
-                if task["completed_period"] != self.current_period(task["frequency"])
+                if task["completed_period"] != self.current_period(
+                    task["frequency"]
+                )
             ]
             connection.executemany(
                 "UPDATE tasks SET completed = 0 WHERE id = ?",
@@ -194,16 +196,65 @@ class Database:
         return bool(expired_ids)
 
     @staticmethod
-    def current_period(frequency, value=None):
-        current_date = (value or datetime.now().astimezone().date())
+    def _as_local_datetime(value=None):
+        current = value or datetime.now().astimezone()
+        if isinstance(current, date) and not isinstance(current, datetime):
+            current = datetime.combine(current, datetime.min.time()).replace(
+                hour=12
+            )
+        return current.astimezone()
+
+    @classmethod
+    def current_period_start(cls, frequency, value=None):
+        current = cls._as_local_datetime(value)
         if frequency == "Weekly":
-            week_start = current_date - timedelta(days=current_date.weekday())
-            return week_start.isoformat()
+            return (current - timedelta(days=current.weekday())).replace(
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
         if frequency == "Monthly":
-            return current_date.replace(day=1).isoformat()
+            return current.replace(
+                day=1,
+                hour=0,
+                minute=0,
+                second=0,
+                microsecond=0,
+            )
+        if frequency == "As needed":
+            return current
+        return current.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    @classmethod
+    def current_period(cls, frequency, value=None):
+        period_start = cls.current_period_start(frequency, value)
         if frequency == "As needed":
             return "ongoing"
-        return current_date.isoformat()
+        return period_start.date().isoformat()
+
+    @classmethod
+    def next_period_start(cls, frequency, value=None):
+        current = cls._as_local_datetime(value)
+        if frequency == "Weekly":
+            return cls.current_period_start(
+                frequency,
+                current,
+            ) + timedelta(days=7)
+        if frequency == "Monthly":
+            period_start = cls.current_period_start(frequency, current)
+            if period_start.month == 12:
+                return period_start.replace(
+                    year=period_start.year + 1,
+                    month=1,
+                )
+            return period_start.replace(month=period_start.month + 1)
+        if frequency == "As needed":
+            return None
+        return cls.current_period_start(
+            frequency,
+            current,
+        ) + timedelta(days=1)
 
     def get_tasks(self):
         with closing(self.connect()) as connection:
@@ -330,9 +381,16 @@ class Database:
         for task in tasks:
             created = datetime.fromisoformat(task["created_at"]).astimezone().date()
             if task["frequency"] == "Weekly":
-                current_week = today - timedelta(days=today.weekday())
+                current_week = self.current_period_start(
+                    "Weekly",
+                    today,
+                ).date()
+                created_week = self.current_period_start(
+                    "Weekly",
+                    created,
+                ).date()
                 period = max(
-                    created - timedelta(days=created.weekday()),
+                    created_week,
                     current_week - timedelta(weeks=4),
                 )
                 periods = []

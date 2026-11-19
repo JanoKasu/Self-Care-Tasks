@@ -15,6 +15,7 @@ from src.task_model import (
     TaskModel,
 )
 from src.update_controller import UpdateController
+from src.weather_controller import WeatherController
 
 
 class NavigationTests(unittest.TestCase):
@@ -27,6 +28,9 @@ class NavigationTests(unittest.TestCase):
         cls.attention_model = TaskAttentionModel()
         cls.task_model = TaskModel(cls.history_model, cls.attention_model)
         cls.update_controller = UpdateController(project_root)
+        cls.weather_controller = WeatherController(
+            project_root / "tests" / ".weather-data"
+        )
         cls.engine.rootContext().setContextProperty("taskModel", cls.task_model)
         cls.engine.rootContext().setContextProperty(
             "historyModel",
@@ -39,6 +43,10 @@ class NavigationTests(unittest.TestCase):
         cls.engine.rootContext().setContextProperty(
             "updateController",
             cls.update_controller
+        )
+        cls.engine.rootContext().setContextProperty(
+            "weatherController",
+            cls.weather_controller
         )
 
         cls.engine.load(str(project_root / "qml" / "Main.qml"))
@@ -59,7 +67,7 @@ class NavigationTests(unittest.TestCase):
         page_stack = self.root_objects[0].findChild(QObject, "pageStack")
         self.assertIsNotNone(page_stack)
 
-        for index in (0, 1, 2, 3):
+        for index in (0, 1, 2, 3, 4):
             navigation.setProperty("currentIndex", index)
             self.app.processEvents()
             self.assertEqual(navigation.property("currentIndex"), index)
@@ -71,6 +79,14 @@ class NavigationTests(unittest.TestCase):
             "settingsPage"
         )
         self.assertIsNone(settings_page)
+
+    def test_weather_tab_is_bound_to_weather_page(self):
+        weather_tab = self.root_objects[0].findChild(QObject, "weatherTab")
+
+        self.assertIsNotNone(weather_tab)
+        self.navigation.setProperty("currentIndex", 4)
+        self.app.processEvents()
+        self.assertEqual(weather_tab.property("checked"), True)
 
     def test_added_task_is_instantiated_as_a_task_card(self):
         title = "Regression test task"
@@ -174,6 +190,35 @@ class NavigationTests(unittest.TestCase):
         self.assertIsNotNone(home_task_button)
         self.assertTrue(home_task_button.property("activeFocusOnTab"))
         self.assertIsNotNone(update_tab)
+
+    def test_task_duration_disappears_when_completed(self):
+        project_root = Path(__file__).resolve().parent.parent
+        component = QQmlComponent(self.engine)
+        component.setData(
+            b"""
+                import QtQuick
+                import "components"
+
+                TaskCard {
+                    objectName: "durationTaskCard"
+                    completed: false
+                }
+            """,
+            QUrl.fromLocalFile(
+                str(project_root / "qml" / "DurationTaskCardTest.qml")
+            ),
+        )
+        task_card = component.create()
+        self.assertIsNotNone(task_card, component.errorString())
+        duration_pill = task_card.findChild(QObject, "durationPill")
+        self.assertIsNotNone(duration_pill)
+        self.assertTrue(duration_pill.property("visible"))
+
+        task_card.setProperty("completed", True)
+        self.app.processEvents()
+
+        self.assertFalse(duration_pill.property("visible"))
+        task_card.deleteLater()
 
 
 if __name__ == "__main__":

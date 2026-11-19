@@ -14,6 +14,7 @@ from src.task_model import (
     TaskModel,
 )
 from src.update_controller import UpdateController
+from src.weather_controller import WeatherController
 from src.database import Database
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -34,6 +35,7 @@ def main():
     task_model = TaskModel(history_model, attention_model, database)
     update_controller = UpdateController(PROJECT_DIR)
     inactivity_controller = InactivityController(timeout_seconds=30)
+    weather_controller = WeatherController()
     app.installEventFilter(inactivity_controller)
 
     engine.rootContext().setContextProperty(
@@ -55,6 +57,10 @@ def main():
     engine.rootContext().setContextProperty(
         "updateController",
         update_controller
+    )
+    engine.rootContext().setContextProperty(
+        "weatherController",
+        weather_controller
     )
 
     engine.load(str(resource_path("qml", "Main.qml")))

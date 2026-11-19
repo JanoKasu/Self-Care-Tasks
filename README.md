@@ -22,6 +22,15 @@ are also corrected immediately when the app starts.
 Task cards use a priority gradient: red for high priority, green for medium
 priority, and gold for low priority.
 
+## Weather
+
+The Weather tab shows current conditions, the next eight hours, and a
+seven-day forecast. Choose a city once with the touchscreen search interface;
+the coordinates are saved in `data/weather.json` and the forecast refreshes
+every 15 minutes while the app is open. Forecasts use Open-Meteo and are shown
+in Fahrenheit. An internet outage is reported on the page without blocking the
+rest of the dashboard.
+
 The dashboard switches to its dark theme automatically from 8:00 PM until
 6:00 AM, using the device's local time. It schedules a timer for the next
 switch and emits `Theme.themeChanged(darkMode)` when the mode changes.

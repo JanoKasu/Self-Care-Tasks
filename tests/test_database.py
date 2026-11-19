@@ -263,6 +263,46 @@ class DatabaseTests(unittest.TestCase):
             "2026-11-01",
         )
 
+    def test_daily_weekly_and_monthly_period_boundaries(self):
+        daily_start = self.database.current_period_start(
+            "Daily",
+            datetime(2026, 11, 18, 23, 30),
+        )
+        daily_next = self.database.next_period_start(
+            "Daily",
+            datetime(2026, 11, 18, 23, 30),
+        )
+        weekly_sunday_night = self.database.current_period_start(
+            "Weekly",
+            datetime(2026, 11, 22, 23, 59),
+        )
+        weekly_monday_midnight = self.database.current_period_start(
+            "Weekly",
+            datetime(2026, 11, 23, 0, 0),
+        )
+        monthly_end = self.database.current_period_start(
+            "Monthly",
+            datetime(2026, 11, 30, 23, 59),
+        )
+        monthly_start = self.database.current_period_start(
+            "Monthly",
+            datetime(2026, 12, 1, 0, 0),
+        )
+
+        self.assertEqual((daily_start.hour, daily_start.minute), (0, 0))
+        self.assertEqual(daily_next.date().isoformat(), "2026-11-19")
+        self.assertEqual(weekly_sunday_night.date().isoformat(), "2026-11-16")
+        self.assertEqual(
+            weekly_monday_midnight.date().isoformat(),
+            "2026-11-23",
+        )
+        self.assertEqual(
+            (weekly_monday_midnight.hour, weekly_monday_midnight.minute),
+            (0, 0),
+        )
+        self.assertEqual(monthly_end.date().isoformat(), "2026-11-01")
+        self.assertEqual(monthly_start.date().isoformat(), "2026-12-01")
+
     def test_monthly_and_weekly_completions_expire_by_period(self):
         weekly_id = self.database.add_task(
             "Weekly",
@@ -395,6 +435,32 @@ class DatabaseTests(unittest.TestCase):
             "Daily",
         )
 
+    def test_task_model_starts_daily_duration_at_midnight(self):
+        self.database.add_task(
+            "Daily duration",
+            "",
+            "Health",
+            "#ffffff",
+            "Low",
+            "clock",
+            "2026-01-01T12:00:00+00:00",
+            "Daily",
+        )
+        model = TaskModel(database=self.database)
+
+        duration_start = datetime.fromisoformat(
+            model.data(
+                model.index(0, 0),
+                TaskModel.DurationStartedAtRole,
+            )
+        )
+
+        self.assertEqual(duration_start.date(), datetime.now().astimezone().date())
+        self.assertEqual(
+            (duration_start.hour, duration_start.minute, duration_start.second),
+            (0, 0, 0),
+        )
+
     def test_task_model_rejects_blank_title(self):
         import src.task_model as task_model_module
 
@@ -415,6 +481,35 @@ class DatabaseTests(unittest.TestCase):
 
         self.assertFalse(result)
         self.assertEqual(model.count, 0)
+
+    def test_task_model_deletion_refreshes_completion_history(self):
+        import src.task_model as task_model_module
+
+        task_id = self.database.add_task(
+            "Delete me",
+            "Temporary task",
+            "Health",
+            "#ffffff",
+            "Low",
+            "test",
+            "2026-11-17T12:00:00+00:00",
+        )
+        self.database.update_task_completion(task_id, True)
+
+        history_model = task_model_module.CompletionHistoryModel(self.database)
+        original_database = task_model_module.Database
+        task_model_module.Database = lambda: self.database
+        try:
+            model = TaskModel(history_model=history_model)
+        finally:
+            task_model_module.Database = original_database
+
+        self.assertEqual(history_model.count, 1)
+        self.assertTrue(model.deleteTask(task_id))
+
+        self.assertEqual(model.count, 0)
+        self.assertEqual(history_model.count, 0)
+        self.assertEqual(self.database.get_total_xp(), 10)
 
 if __name__ == "__main__":
     unittest.main()

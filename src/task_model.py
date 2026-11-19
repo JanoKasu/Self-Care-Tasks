@@ -159,6 +159,7 @@ class TaskModel(QAbstractListModel):
     CompletedRole = IdRole + 8
     PointsRole = IdRole + 9
     FrequencyRole = IdRole + 10
+    DurationStartedAtRole = IdRole + 11
 
     XP_PER_LEVEL = 100
 
@@ -178,14 +179,19 @@ class TaskModel(QAbstractListModel):
 
     def _schedule_period_refresh(self):
         now = datetime.now().astimezone()
-        tomorrow = (now + timedelta(days=1)).date()
-        next_midnight = datetime.combine(
-            tomorrow,
-            datetime.min.time(),
-            tzinfo=now.tzinfo,
-        )
+        reset_times = [
+            self.database.next_period_start(task["frequency"], now)
+            for task in self.tasks
+            if task["frequency"] != "As needed"
+        ]
+        reset_times = [value for value in reset_times if value is not None]
+        if not reset_times:
+            self.period_timer.stop()
+            return
+
+        next_reset = min(reset_times)
         self.period_timer.start(
-            max(1000, int((next_midnight - now).total_seconds() * 1000))
+            max(1000, int((next_reset - now).total_seconds() * 1000))
         )
 
     # Expose database fields to QML
@@ -199,6 +205,7 @@ class TaskModel(QAbstractListModel):
             self.ImpactRole: b"impact",
             self.IconRole: b"taskIcon",
             self.CreatedAtRole: b"createdAt",
+            self.DurationStartedAtRole: b"durationStartedAt",
             self.CompletedRole: b"completed",
             self.PointsRole: b"points",
             self.FrequencyRole: b"frequency",
@@ -230,6 +237,7 @@ class TaskModel(QAbstractListModel):
             self.ImpactRole: task["impact"],
             self.IconRole: task["icon"],
             self.CreatedAtRole: task["created_at"],
+            self.DurationStartedAtRole: self._duration_started_at(task),
             self.CompletedRole: bool(task["completed"]),
             self.PointsRole: self.database.XP_BY_IMPACT.get(task["impact"], 10),
             self.FrequencyRole: task["frequency"],
@@ -335,9 +343,7 @@ class TaskModel(QAbstractListModel):
     @Slot()
     def refreshPeriods(self):
         try:
-            if not self.database.reset_expired_tasks():
-                return
-
+            self.database.reset_expired_tasks()
             self.beginResetModel()
             self.tasks = self.database.get_tasks()
             self.endResetModel()
@@ -432,6 +438,7 @@ class TaskModel(QAbstractListModel):
         self.progressChanged.emit()
         if self.attention_model is not None:
             self.attention_model.refresh()
+        self._schedule_period_refresh()
         return True
 
     @Slot(int)
@@ -447,11 +454,22 @@ class TaskModel(QAbstractListModel):
                 self.progressChanged.emit()
                 self.stats = self.database.get_progress_stats()
                 self.statsChanged.emit()
+                if self.history_model is not None:
+                    self.history_model.refresh()
                 if self.attention_model is not None:
                     self.attention_model.refresh()
+                self._schedule_period_refresh()
                 return True
 
         return False
+
+    def _duration_started_at(self, task):
+        created = datetime.fromisoformat(task["created_at"]).astimezone()
+        if task["frequency"] == "As needed":
+            return created.isoformat()
+
+        period_start = self.database.current_period_start(task["frequency"])
+        return max(created, period_start).isoformat()
 
     def flags(self, index):
         if not index.isValid():

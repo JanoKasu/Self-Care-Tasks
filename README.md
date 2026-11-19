@@ -26,6 +26,11 @@ The dashboard switches to its dark theme automatically from 8:00 PM until
 6:00 AM, using the device's local time. It schedules a timer for the next
 switch and emits `Theme.themeChanged(darkMode)` when the mode changes.
 
+After 30 seconds without input, the dashboard dims with a dark overlay and
+requests display power-off through X11 DPMS. Touch, mouse, or keyboard input
+restores the display; DPMS power saving requires `xset` and a compatible
+display session.
+
 ## Install on Raspberry Pi OS
 
 ```bash

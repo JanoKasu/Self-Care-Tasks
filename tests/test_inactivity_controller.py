@@ -25,10 +25,13 @@ class InactivityControllerTests(unittest.TestCase):
 
         self.assertTrue(controller.asleep)
         set_override_cursor.assert_called_once()
-        controller._run_xset.assert_called_once_with("dpms", "force", "off")
+        controller._run_xset.assert_any_call("+dpms")
+        controller._run_xset.assert_any_call("dpms", "force", "off")
+        self.assertEqual(controller._run_xset.call_count, 2)
 
         controller.sleep()
         set_override_cursor.assert_called_once()
+        self.assertEqual(controller._run_xset.call_count, 2)
 
     @patch("src.inactivity_controller.QGuiApplication.restoreOverrideCursor")
     @patch("src.inactivity_controller.QGuiApplication.setOverrideCursor")

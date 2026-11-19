@@ -523,4 +523,14 @@ ApplicationWindow {
         z: 100
         visible: active
     }
+
+    Rectangle {
+        id: inactivityDimmer
+        objectName: "inactivityDimmer"
+        anchors.fill: parent
+        z: 1000
+        color: "black"
+        opacity: 0.85
+        visible: inactivityController.asleep
+    }
 }

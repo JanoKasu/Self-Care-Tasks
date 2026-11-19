@@ -16,6 +16,7 @@ from src.task_model import (
 )
 from src.network_controller import NetworkController
 from src.update_controller import UpdateController
+from src.inactivity_controller import InactivityController
 
 
 class NavigationTests(unittest.TestCase):
@@ -29,6 +30,8 @@ class NavigationTests(unittest.TestCase):
         cls.task_model = TaskModel(cls.history_model, cls.attention_model)
         cls.network_controller = NetworkController()
         cls.update_controller = UpdateController(project_root)
+        cls.inactivity_controller = InactivityController(timeout_seconds=30)
+        cls.inactivity_controller._run_xset = lambda *arguments: None
         cls.engine.rootContext().setContextProperty("taskModel", cls.task_model)
         cls.engine.rootContext().setContextProperty(
             "historyModel",
@@ -45,6 +48,10 @@ class NavigationTests(unittest.TestCase):
         cls.engine.rootContext().setContextProperty(
             "updateController",
             cls.update_controller
+        )
+        cls.engine.rootContext().setContextProperty(
+            "inactivityController",
+            cls.inactivity_controller
         )
 
         cls.engine.load(str(project_root / "qml" / "Main.qml"))
@@ -84,6 +91,20 @@ class NavigationTests(unittest.TestCase):
             "virtualKeyboard"
         )
         self.assertIsNotNone(virtual_keyboard)
+
+    def test_inactivity_dimmer_tracks_controller_state(self):
+        dimmer = self.root_objects[0].findChild(QObject, "inactivityDimmer")
+        self.assertIsNotNone(dimmer)
+        self.assertFalse(dimmer.property("visible"))
+        self.assertEqual(dimmer.property("opacity"), 0.85)
+
+        self.inactivity_controller.sleep()
+        self.app.processEvents()
+        self.assertTrue(dimmer.property("visible"))
+
+        self.inactivity_controller.wake()
+        self.app.processEvents()
+        self.assertFalse(dimmer.property("visible"))
 
     def test_theme_uses_dark_mode_between_eight_pm_and_six_am(self):
         project_root = Path(__file__).resolve().parent.parent

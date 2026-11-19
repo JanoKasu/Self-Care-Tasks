@@ -83,6 +83,7 @@ class InactivityController(QObject):
             QGuiApplication.setOverrideCursor(
                 QCursor(Qt.CursorShape.BlankCursor)
             )
+            self._run_xset("+dpms")
             self._run_xset("dpms", "force", "off")
 
     def wake(self):

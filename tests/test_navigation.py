@@ -14,7 +14,6 @@ from src.task_model import (
     TaskAttentionModel,
     TaskModel,
 )
-from src.network_controller import NetworkController
 from src.update_controller import UpdateController
 
 
@@ -27,7 +26,6 @@ class NavigationTests(unittest.TestCase):
         cls.history_model = CompletionHistoryModel()
         cls.attention_model = TaskAttentionModel()
         cls.task_model = TaskModel(cls.history_model, cls.attention_model)
-        cls.network_controller = NetworkController()
         cls.update_controller = UpdateController(project_root)
         cls.engine.rootContext().setContextProperty("taskModel", cls.task_model)
         cls.engine.rootContext().setContextProperty(
@@ -37,10 +35,6 @@ class NavigationTests(unittest.TestCase):
         cls.engine.rootContext().setContextProperty(
             "attentionModel",
             cls.attention_model
-        )
-        cls.engine.rootContext().setContextProperty(
-            "networkController",
-            cls.network_controller
         )
         cls.engine.rootContext().setContextProperty(
             "updateController",

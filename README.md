@@ -33,7 +33,7 @@ cd "$HOME/Documents/Self-Care-Tasks"
 sudo apt update
 sudo apt install -y python3-venv python3-pip \
   libegl1 libgl1 libgbm1 libxkbcommon0 libxcb-cursor0 \
-  libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils network-manager
+  libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils
 
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
@@ -107,9 +107,9 @@ integrity error, restore a known-good backup before reopening it.
 ```
 
 Tests use isolated temporary databases and cover task persistence, completion
-periods, XP, migrations, backups, navigation, connectivity, inactivity, and
-application updates. The update controller tests mock Git and pip so test runs
-never modify the checkout or install packages.
+periods, XP, migrations, backups, navigation, inactivity, and application
+updates. The update controller tests mock Git and pip so test runs never modify
+the checkout or install packages.
 
 ## Update
 

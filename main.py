@@ -8,7 +8,6 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 from src.inactivity_controller import InactivityController
-from src.network_controller import NetworkController
 from src.task_model import (
     CompletionHistoryModel,
     TaskAttentionModel,
@@ -33,7 +32,6 @@ def main():
     history_model = CompletionHistoryModel(database)
     attention_model = TaskAttentionModel(database)
     task_model = TaskModel(history_model, attention_model, database)
-    network_controller = NetworkController()
     update_controller = UpdateController(PROJECT_DIR)
     inactivity_controller = InactivityController(timeout_seconds=30)
     app.installEventFilter(inactivity_controller)
@@ -53,10 +51,6 @@ def main():
     engine.rootContext().setContextProperty(
         "inactivityController",
         inactivity_controller
-    )
-    engine.rootContext().setContextProperty(
-        "networkController",
-        network_controller
     )
     engine.rootContext().setContextProperty(
         "updateController",

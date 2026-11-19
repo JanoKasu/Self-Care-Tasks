@@ -22,6 +22,15 @@ are also corrected immediately when the app starts.
 Task cards use a priority gradient: red for high priority, green for medium
 priority, and gold for low priority.
 
+## Weather
+
+The Weather tab shows current conditions, the next eight hours, and a
+seven-day forecast. Choose a city once with the touchscreen search interface;
+the coordinates are saved in `data/weather.json` and the forecast refreshes
+every 15 minutes while the app is open. Forecasts use Open-Meteo and are shown
+in Fahrenheit. An internet outage is reported on the page without blocking the
+rest of the dashboard.
+
 The dashboard switches to its dark theme automatically from 8:00 PM until
 6:00 AM, using the device's local time. It schedules a timer for the next
 switch and emits `Theme.themeChanged(darkMode)` when the mode changes.
@@ -56,12 +65,18 @@ private contributions on your GitHub profile, then retry. Disconnect removes
 the local keyring token; revoke the OAuth app in GitHub's authorized
 applications settings as well if you want to invalidate the token remotely.
 
+All long pages and the navigation rail support touch swiping and visible
+scrollbars when their content exceeds the available display. Controls use
+large touch targets and switch to compact spacing on smaller Raspberry Pi
+screens.
+
 ## Install on Raspberry Pi OS
 
 ```bash
 cd "$HOME/Documents/Self-Care-Tasks"
 sudo apt update
 sudo apt install -y python3-venv python3-pip \
+  fonts-noto-color-emoji \
   libegl1 libgl1 libgbm1 libxkbcommon0 libxcb-cursor0 \
   libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils network-manager \
   gnome-keyring
@@ -138,9 +153,9 @@ integrity error, restore a known-good backup before reopening it.
 ```
 
 Tests use isolated temporary databases and cover task persistence, completion
-periods, XP, migrations, backups, navigation, connectivity, inactivity, and
-application updates. The update controller tests mock Git and pip so test runs
-never modify the checkout or install packages.
+periods, XP, migrations, backups, navigation, inactivity, and application
+updates. The update controller tests mock Git and pip so test runs never modify
+the checkout or install packages.
 
 ## Update
 

@@ -2,3 +2,6 @@ PySide6_Essentials==6.12.0
 PySide6_Addons==6.12.0
 keyring==25.7.0
 qrcode==8.2
+
+# Raspberry Pi system font (not a pip package):
+# sudo apt install fonts-noto-color-emoji

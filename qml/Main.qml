@@ -46,22 +46,26 @@ ApplicationWindow {
                 }
             }
 
-            ColumnLayout {
+            ScrollView {
+                id: navigationScroll
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                anchors.topMargin: 18
-                anchors.bottomMargin: 18
-                spacing: 4
+                anchors.margins: 10
+                clip: true
+                ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-                TabButton {
+                ColumnLayout {
+                    width: navigationScroll.availableWidth
+                    spacing: 6
+
+                    TabButton {
                     id: homeTab
                     objectName: "homeTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 56
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 0
                     hoverEnabled: true
                     Accessible.name: "Home"
@@ -102,7 +106,7 @@ ApplicationWindow {
                     id: dashboardTab
                     objectName: "dashboardTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 56
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 1
                     hoverEnabled: true
                     Accessible.name: "Dashboard"
@@ -143,7 +147,7 @@ ApplicationWindow {
                     id: historyTab
                     objectName: "historyTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 56
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 2
                     hoverEnabled: true
                     Accessible.name: "Progress"
@@ -184,7 +188,7 @@ ApplicationWindow {
                     id: attentionTab
                     objectName: "attentionTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 56
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 3
                     hoverEnabled: true
                     Accessible.name: "Needs attention"
@@ -242,37 +246,85 @@ ApplicationWindow {
                 }
 
                 TabButton {
-                    id: githubTab
-                    objectName: "githubTab"
+                    id: weatherTab
+                    objectName: "weatherTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 56
+                    Layout.preferredHeight: 54
                     checked: navigation.currentIndex === 4
                     hoverEnabled: true
-                    Accessible.name: "GitHub"
-                    ToolTip.text: "GitHub"
+                    Accessible.name: "Weather"
+                    ToolTip.text: "Weather"
                     ToolTip.visible: hovered
                     onClicked: navigation.currentIndex = 4
 
                     background: Rectangle {
                         anchors.fill: parent
                         radius: 14
-                        color: githubTab.checked ? AppTheme.Theme.accent : "transparent"
+                        color: weatherTab.checked ? AppTheme.Theme.accent : "transparent"
                         Behavior on color { ColorAnimation { duration: 180 } }
                     }
 
                     contentItem: Column {
                         spacing: 1
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "\u2600"
+                            color: weatherTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 25
+                            font.weight: Font.DemiBold
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Weather"
+                            color: weatherTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            font.pixelSize: 9
+                            font.weight: Font.DemiBold
+                        }
+                    }
+                }
+
+                TabButton {
+                    id: githubTab
+                    objectName: "githubTab"
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 54
+                    checked: navigation.currentIndex === 5
+                    hoverEnabled: true
+                    Accessible.name: "GitHub"
+                    ToolTip.text: "GitHub"
+                    ToolTip.visible: hovered
+                    onClicked: navigation.currentIndex = 5
+
+                    background: Rectangle {
+                        anchors.fill: parent
+                        radius: 14
+                        color: githubTab.checked
+                               ? AppTheme.Theme.accent
+                               : "transparent"
+                        Behavior on color { ColorAnimation { duration: 180 } }
+                    }
+
+                    contentItem: Column {
+                        spacing: 1
+
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "\u2318"
-                            color: githubTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            color: githubTab.checked
+                                   ? AppTheme.Theme.surface
+                                   : AppTheme.Theme.textMuted
                             font.pixelSize: 26
                             font.weight: Font.DemiBold
                         }
+
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: "GitHub"
-                            color: githubTab.checked ? AppTheme.Theme.surface : AppTheme.Theme.textMuted
+                            color: githubTab.checked
+                                   ? AppTheme.Theme.surface
+                                   : AppTheme.Theme.textMuted
                             font.pixelSize: 10
                             font.weight: Font.DemiBold
                         }
@@ -285,7 +337,7 @@ ApplicationWindow {
                     id: updateTab
                     objectName: "updateTab"
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 56
+                    Layout.preferredHeight: 54
                     hoverEnabled: true
                     Accessible.name: "App updates"
                     ToolTip.text: "App updates"
@@ -331,6 +383,7 @@ ApplicationWindow {
                         anchors.topMargin: 8
                     }
                 }
+                }
             }
         }
 
@@ -351,6 +404,7 @@ ApplicationWindow {
             Dashboard {}
             History {}
             Attention {}
+            Weather {}
             GitHub {}
         }
     }
@@ -358,7 +412,6 @@ ApplicationWindow {
     AppDialog {
         id: updateDialog
         objectName: "updateDialog"
-        anchors.centerIn: parent
         title: "App updates"
         icon: "\u21BB"
         subtitle: "Keep the dashboard current without rebuilding it."
@@ -555,7 +608,6 @@ ApplicationWindow {
             }
         }
     }
-
     InputPanel {
         id: virtualKeyboard
         objectName: "virtualKeyboard"

@@ -17,7 +17,7 @@ Item {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 24
+        anchors.margins: root.width < 560 ? 16 : 24
         spacing: 18
 
         RowLayout {
@@ -139,12 +139,14 @@ Item {
                 }
 
                 Rectangle {
+                    visible: root.width >= 560
                     Layout.preferredWidth: 1
                     Layout.fillHeight: true
                     color: AppTheme.Theme.divider
                 }
 
                 ColumnLayout {
+                    visible: root.width >= 560
                     Layout.preferredWidth: 190
                     spacing: 7
 
@@ -201,6 +203,7 @@ Item {
 
             GridLayout {
                 id: taskGrid
+                objectName: "taskGrid"
                 width: taskScrollView.availableWidth
 
                 columns: width < 560 ? 1 : 2
@@ -221,9 +224,10 @@ Item {
                         backgroundColor: model.backgroundColor
                         completed: model.completed
                         createdAt: model.createdAt
+                        durationStartedAt: model.durationStartedAt
 
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 156
+                        Layout.preferredHeight: 188
 
                         onCompletionRequested: function(isCompleted) {
                             taskModel.setCompleted(
@@ -231,48 +235,54 @@ Item {
                                 isCompleted
                             )
                         }
+
+                        onDeleteRequested: {
+                            root.pendingDeleteTaskId = model.taskId
+                            root.pendingDeleteTaskTitle = model.title
+                            deleteTaskDialog.open()
+                        }
                     }
+                }
 
-                    Item {
-                        visible: taskModel.count === 0
-                        Layout.columnSpan: taskGrid.columns
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 220
+                Item {
+                    visible: taskModel.count === 0
+                    Layout.columnSpan: taskGrid.columns
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 220
 
-                        ColumnLayout {
-                            anchors.centerIn: parent
-                            spacing: 10
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        spacing: 10
 
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "+"
-                                color: AppTheme.Theme.accent
-                                font.pixelSize: 38
-                                font.bold: true
-                            }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "+"
+                            color: AppTheme.Theme.accent
+                            font.pixelSize: 38
+                            font.bold: true
+                        }
 
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "Start with one small step"
-                                color: AppTheme.Theme.textPrimary
-                                font.pixelSize: 18
-                                font.bold: true
-                            }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Start with one small step"
+                            color: AppTheme.Theme.textPrimary
+                            font.pixelSize: 18
+                            font.bold: true
+                        }
 
-                            Text {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "Add a self-care task to begin building your routine."
-                                color: AppTheme.Theme.textSecondary
-                                font.pixelSize: 13
-                                wrapMode: Text.WordWrap
-                            }
+                        Text {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Add a self-care task to begin building your routine."
+                            color: AppTheme.Theme.textSecondary
+                            font.pixelSize: 13
+                            wrapMode: Text.WordWrap
+                        }
 
-                            ActionButton {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: "Add your first task"
-                                primary: true
-                                onClicked: addTaskDialog.open()
-                            }
+                        ActionButton {
+                            Layout.alignment: Qt.AlignHCenter
+                            text: "Add your first task"
+                            primary: true
+                            onClicked: addTaskDialog.open()
                         }
                     }
                 }
@@ -310,6 +320,8 @@ Item {
 
     property int rewardPoints: 0
     property bool leveledUp: false
+    property int pendingDeleteTaskId: -1
+    property string pendingDeleteTaskTitle: ""
 
     Connections {
         target: taskModel
@@ -322,9 +334,50 @@ Item {
     }
 
     AppDialog {
+        id: deleteTaskDialog
+        objectName: "deleteTaskDialog"
+        width: Math.min(root.width - 40, 460)
+        title: "Delete this task?"
+        icon: "×"
+        subtitle: "This will permanently remove the task and its completion history."
+
+        Text {
+            width: parent.width
+            text: '"' + root.pendingDeleteTaskTitle + '" will be deleted.'
+            color: AppTheme.Theme.textSecondary
+            font.pixelSize: 15
+            wrapMode: Text.WordWrap
+        }
+
+        footer: Item {
+            implicitHeight: 68
+
+            RowLayout {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: 24
+                spacing: 10
+
+                ActionButton {
+                    text: "Cancel"
+                    onClicked: deleteTaskDialog.reject()
+                }
+
+                ActionButton {
+                    text: "Delete"
+                    primary: true
+                    onClicked: {
+                        taskModel.deleteTask(root.pendingDeleteTaskId)
+                        deleteTaskDialog.accept()
+                    }
+                }
+            }
+        }
+    }
+
+    AppDialog {
         id: addTaskDialog
         objectName: "addTaskDialog"
-        anchors.centerIn: parent
         width: Math.min(root.width - 40, 600)
         title: "Add a self-care task"
         icon: "+"
@@ -352,9 +405,15 @@ Item {
             }
         }
 
-        ColumnLayout {
-            width: parent.width
-            spacing: 12
+        ScrollView {
+            anchors.fill: parent
+            clip: true
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+            ColumnLayout {
+                width: parent.availableWidth
+                spacing: 12
 
             RowLayout {
                 Layout.fillWidth: true
@@ -490,6 +549,7 @@ Item {
                     font.weight: Font.DemiBold
                 }
             }
+            }
         }
 
         onOpened: titleField.forceActiveFocus()
@@ -500,7 +560,7 @@ Item {
                     "Anytime",
                     AppTheme.Theme.taskMint,
                     impactField.currentText,
-                    "🌿",
+                    "",
                     frequencyField.currentText)) {
                 titleField.text = ""
                 descriptionField.text = ""

@@ -16,6 +16,7 @@ from src.task_model import (
     TaskModel,
 )
 from src.update_controller import UpdateController
+from src.weather_controller import WeatherController
 from src.database import Database
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -39,6 +40,7 @@ def main():
     update_controller = UpdateController(PROJECT_DIR)
     inactivity_controller = InactivityController(timeout_seconds=30)
     github_controller = GitHubController()
+    weather_controller = WeatherController()
     app.installEventFilter(inactivity_controller)
 
     engine.rootContext().setContextProperty(
@@ -64,6 +66,10 @@ def main():
     engine.rootContext().setContextProperty(
         "updateController",
         update_controller
+    )
+    engine.rootContext().setContextProperty(
+        "weatherController",
+        weather_controller
     )
     engine.rootContext().setContextProperty(
         "githubController",

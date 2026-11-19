@@ -15,10 +15,11 @@ from src.task_model import (
     TaskAttentionModel,
     TaskModel,
 )
-from src.network_controller import NetworkController
 from src.update_controller import UpdateController
+from src.network_controller import NetworkController
 from src.inactivity_controller import InactivityController
 from src.github_controller import GitHubController, GitHubQrProvider
+from src.weather_controller import WeatherController
 
 
 class NavigationTests(unittest.TestCase):
@@ -37,6 +38,9 @@ class NavigationTests(unittest.TestCase):
         cls.inactivity_controller._run_xset = lambda *arguments: None
         with patch("src.github_controller.QTimer.singleShot"):
             cls.github_controller = GitHubController()
+        cls.weather_controller = WeatherController(
+            project_root / "tests" / ".weather-data"
+        )
         cls.engine.rootContext().setContextProperty("taskModel", cls.task_model)
         cls.engine.rootContext().setContextProperty(
             "historyModel",
@@ -47,16 +51,20 @@ class NavigationTests(unittest.TestCase):
             cls.attention_model
         )
         cls.engine.rootContext().setContextProperty(
-            "networkController",
-            cls.network_controller
-        )
-        cls.engine.rootContext().setContextProperty(
             "updateController",
             cls.update_controller
         )
         cls.engine.rootContext().setContextProperty(
+            "networkController",
+            cls.network_controller
+        )
+        cls.engine.rootContext().setContextProperty(
             "inactivityController",
             cls.inactivity_controller
+        )
+        cls.engine.rootContext().setContextProperty(
+            "weatherController",
+            cls.weather_controller
         )
         cls.engine.rootContext().setContextProperty(
             "githubController",
@@ -81,7 +89,7 @@ class NavigationTests(unittest.TestCase):
         page_stack = self.root_objects[0].findChild(QObject, "pageStack")
         self.assertIsNotNone(page_stack)
 
-        for index in (0, 1, 2, 3, 4):
+        for index in (0, 1, 2, 3, 4, 5):
             navigation.setProperty("currentIndex", index)
             self.app.processEvents()
             self.assertEqual(navigation.property("currentIndex"), index)
@@ -93,6 +101,73 @@ class NavigationTests(unittest.TestCase):
             "settingsPage"
         )
         self.assertIsNone(settings_page)
+
+    def test_weather_tab_is_bound_to_weather_page(self):
+        weather_tab = self.root_objects[0].findChild(QObject, "weatherTab")
+
+        self.assertIsNotNone(weather_tab)
+        self.navigation.setProperty("currentIndex", 4)
+        self.app.processEvents()
+        self.assertEqual(weather_tab.property("checked"), True)
+
+    def test_github_tab_is_bound_to_github_page(self):
+        github_tab = self.root_objects[0].findChild(QObject, "githubTab")
+
+        self.assertIsNotNone(github_tab)
+        self.navigation.setProperty("currentIndex", 5)
+        self.app.processEvents()
+        self.assertTrue(github_tab.property("checked"))
+
+    def test_progress_stats_fill_the_available_page_width(self):
+        self.navigation.setProperty("currentIndex", 2)
+        self.app.processEvents()
+
+        stats_grid = self.root_objects[0].findChild(QObject, "statsGrid")
+
+        self.assertIsNotNone(stats_grid)
+        self.assertGreater(stats_grid.property("width"), 350)
+
+    def test_weather_content_scrolls_at_full_page_width(self):
+        self.weather_controller._has_location = True
+        self.weather_controller.changed.emit()
+        self.navigation.setProperty("currentIndex", 4)
+        self.app.processEvents()
+
+        weather_scroll = self.root_objects[0].findChild(
+            QObject,
+            "weatherScroll",
+        )
+
+        self.assertIsNotNone(weather_scroll)
+        self.assertGreater(weather_scroll.property("availableWidth"), 500)
+        self.assertGreaterEqual(
+            weather_scroll.property("contentWidth"),
+            weather_scroll.property("availableWidth") - 1,
+        )
+        self.weather_controller._has_location = False
+        self.weather_controller.changed.emit()
+
+    def test_added_task_is_instantiated_as_a_task_card(self):
+        title = "Regression test task"
+        self.task_model.addTaskWithFrequency(
+            title,
+            "Verifies that a new task is rendered",
+            "Anytime",
+            "#ffffff",
+            "Medium",
+            "test",
+            "Daily",
+        )
+        task_id = self.task_model.tasks[-1]["id"]
+
+        try:
+            self.app.processEvents()
+            task_grid = self.root_objects[0].findChild(QObject, "taskGrid")
+            self.assertIsNotNone(task_grid)
+            self.assertGreater(task_grid.property("implicitHeight"), 0)
+        finally:
+            self.task_model.deleteTask(task_id)
+            self.app.processEvents()
 
     def test_virtual_keyboard_is_loaded(self):
         virtual_keyboard = self.root_objects[0].findChild(
@@ -116,7 +191,7 @@ class NavigationTests(unittest.TestCase):
         self.assertFalse(dimmer.property("visible"))
 
     def test_github_page_renders_calendar(self):
-        self.navigation.setProperty("currentIndex", 4)
+        self.navigation.setProperty("currentIndex", 5)
         controller = self.github_controller
         controller._token = "test-token"
         controller._contributions_response({
@@ -158,7 +233,7 @@ class NavigationTests(unittest.TestCase):
         controller.changed.emit()
 
     def test_github_signin_shows_local_qr_and_code(self):
-        self.navigation.setProperty("currentIndex", 4)
+        self.navigation.setProperty("currentIndex", 5)
         controller = self.github_controller
         controller._user_code = "ABCD-1234"
         controller._busy = True
@@ -245,6 +320,35 @@ class NavigationTests(unittest.TestCase):
         self.assertIsNotNone(home_task_button)
         self.assertTrue(home_task_button.property("activeFocusOnTab"))
         self.assertIsNotNone(update_tab)
+
+    def test_task_duration_disappears_when_completed(self):
+        project_root = Path(__file__).resolve().parent.parent
+        component = QQmlComponent(self.engine)
+        component.setData(
+            b"""
+                import QtQuick
+                import "components"
+
+                TaskCard {
+                    objectName: "durationTaskCard"
+                    completed: false
+                }
+            """,
+            QUrl.fromLocalFile(
+                str(project_root / "qml" / "DurationTaskCardTest.qml")
+            ),
+        )
+        task_card = component.create()
+        self.assertIsNotNone(task_card, component.errorString())
+        duration_pill = task_card.findChild(QObject, "durationPill")
+        self.assertIsNotNone(duration_pill)
+        self.assertTrue(duration_pill.property("visible"))
+
+        task_card.setProperty("completed", True)
+        self.app.processEvents()
+
+        self.assertFalse(duration_pill.property("visible"))
+        task_card.deleteLater()
 
 
 if __name__ == "__main__":

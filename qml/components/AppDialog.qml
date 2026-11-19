@@ -10,11 +10,23 @@ Dialog {
     property string subtitle: ""
 
     modal: true
-    width: Math.min(parent.width - 40, 460)
-    padding: 24
-    leftPadding: 24
-    rightPadding: 24
-    bottomPadding: 22
+    width: Math.min(parent.width - 24, 460)
+    height: Math.min(
+        implicitHeight,
+        Math.max(180, parent.height - Qt.inputMethod.keyboardRectangle.height - 24)
+    )
+    x: (parent.width - width) / 2
+    y: Math.min(
+        (parent.height - height) / 2,
+        Math.max(
+            12,
+            parent.height - Qt.inputMethod.keyboardRectangle.height - height - 12
+        )
+    )
+    padding: 20
+    leftPadding: 20
+    rightPadding: 20
+    bottomPadding: 18
     focus: true
 
     background: Rectangle {
@@ -50,8 +62,8 @@ Dialog {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.leftMargin: 24
-            anchors.rightMargin: 24
+            anchors.leftMargin: 20
+            anchors.rightMargin: 20
             anchors.topMargin: 24
             spacing: 14
 
@@ -66,6 +78,7 @@ Dialog {
                     anchors.centerIn: parent
                     text: root.icon
                     color: AppTheme.Theme.accent
+                    font.family: "Noto Color Emoji"
                     font.pixelSize: 22
                     font.bold: true
                 }

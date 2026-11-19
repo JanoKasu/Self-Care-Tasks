@@ -7,8 +7,10 @@ Button {
 
     property bool primary: false
 
-    implicitHeight: 52
+    implicitHeight: Math.max(48, 52)
     implicitWidth: 112
+    leftPadding: 16
+    rightPadding: 16
     hoverEnabled: true
     font.pixelSize: 15
     font.weight: Font.DemiBold
@@ -39,5 +41,6 @@ Button {
                               : AppTheme.Theme.textPrimary)
                : AppTheme.Theme.textMuted
         font: root.font
+        elide: Text.ElideRight
     }
 }

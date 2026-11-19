@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import ".." as AppTheme
 
@@ -10,10 +11,17 @@ Item {
         color: AppTheme.Theme.canvas
     }
 
-    ColumnLayout {
+    ScrollView {
+        id: historyScroll
         anchors.fill: parent
-        anchors.margins: 24
-        spacing: 18
+        anchors.margins: root.width < 560 ? 16 : 24
+        clip: true
+        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+        ColumnLayout {
+            width: historyScroll.availableWidth
+            spacing: 18
 
         ColumnLayout {
             spacing: 3
@@ -127,8 +135,11 @@ Item {
         }
 
         GridLayout {
+            id: statsGrid
+            objectName: "statsGrid"
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.preferredHeight: root.width < 560 ? 300 : 220
+            Layout.minimumHeight: 220
             columns: 2
             rowSpacing: 14
             columnSpacing: 14
@@ -189,6 +200,7 @@ Item {
 
                         ColumnLayout {
                             Layout.fillWidth: true
+                            Layout.minimumWidth: 0
                             spacing: 3
 
                             Text {
@@ -200,11 +212,14 @@ Item {
 
                             Text {
                                 Layout.fillWidth: true
+                                maximumLineCount: 2
+                                elide: Text.ElideRight
                                 text: modelData.label
                                 color: AppTheme.Theme.textSecondary
                                 font.pixelSize: 12
                                 wrapMode: Text.WordWrap
                             }
+                        }
                         }
                     }
                 }

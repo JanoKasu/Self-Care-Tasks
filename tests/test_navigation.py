@@ -78,6 +78,28 @@ class NavigationTests(unittest.TestCase):
         )
         self.assertIsNone(settings_page)
 
+    def test_added_task_is_instantiated_as_a_task_card(self):
+        title = "Regression test task"
+        self.task_model.addTaskWithFrequency(
+            title,
+            "Verifies that a new task is rendered",
+            "Anytime",
+            "#ffffff",
+            "Medium",
+            "test",
+            "Daily",
+        )
+        task_id = self.task_model.tasks[-1]["id"]
+
+        try:
+            self.app.processEvents()
+            task_grid = self.root_objects[0].findChild(QObject, "taskGrid")
+            self.assertIsNotNone(task_grid)
+            self.assertGreater(task_grid.property("implicitHeight"), 0)
+        finally:
+            self.task_model.deleteTask(task_id)
+            self.app.processEvents()
+
     def test_virtual_keyboard_is_loaded(self):
         virtual_keyboard = self.root_objects[0].findChild(
             QObject,

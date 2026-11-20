@@ -169,6 +169,25 @@ class NavigationTests(unittest.TestCase):
             self.task_model.deleteTask(task_id)
             self.app.processEvents()
 
+    def test_tasks_view_is_touch_flickable_and_tracks_grid_height(self):
+        self.navigation.setProperty("currentIndex", 1)
+        self.app.processEvents()
+
+        task_scroll = self.root_objects[0].findChild(
+            QObject,
+            "taskScrollView",
+        )
+        task_grid = self.root_objects[0].findChild(QObject, "taskGrid")
+
+        self.assertIsNotNone(task_scroll)
+        self.assertIsNotNone(task_grid)
+        self.assertTrue(task_scroll.property("interactive"))
+        self.assertGreater(task_scroll.property("contentWidth"), 0)
+        self.assertGreaterEqual(
+            task_scroll.property("contentHeight"),
+            task_grid.property("implicitHeight") - 1,
+        )
+
     def test_virtual_keyboard_is_loaded(self):
         virtual_keyboard = self.root_objects[0].findChild(
             QObject,

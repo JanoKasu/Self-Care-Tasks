@@ -15,6 +15,9 @@ class UpdateController(QObject):
         "ssh://git@github.com/JanoKasu/Self-Care-Tasks.git",
     }
     UPDATE_SIGNERS_ENV = "SELF_CARE_UPDATE_ALLOWED_SIGNERS"
+    DEFAULT_ALLOWED_SIGNERS = (
+        Path.home() / ".config" / "self-care-tasks" / "allowed_signers"
+    )
     REVISION_PATTERN = re.compile(r"^[0-9a-f]{40,64}$")
 
     availableChanged = Signal()
@@ -71,10 +74,12 @@ class UpdateController(QObject):
 
     def _allowed_signers_file(self):
         configured_path = os.environ.get(self.UPDATE_SIGNERS_ENV)
-        if not configured_path:
-            return None
-
-        path = Path(configured_path).expanduser().resolve()
+        candidate = (
+            Path(configured_path)
+            if configured_path
+            else self.DEFAULT_ALLOWED_SIGNERS
+        )
+        path = candidate.expanduser().resolve()
         if not path.is_file():
             return None
 
@@ -95,8 +100,9 @@ class UpdateController(QObject):
         allowed_signers = self._allowed_signers_file()
         if allowed_signers is None:
             self._set_status(
-                "Automatic updates are unavailable: configure an external "
-                f"{self.UPDATE_SIGNERS_ENV} SSH signer file."
+                "Automatic updates are unavailable: configure the persistent "
+                "~/.config/self-care-tasks/allowed_signers file or set "
+                f"{self.UPDATE_SIGNERS_ENV}."
             )
             return None
 

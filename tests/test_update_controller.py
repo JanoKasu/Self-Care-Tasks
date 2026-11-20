@@ -63,6 +63,36 @@ class UpdateControllerTests(unittest.TestCase):
         self.assertFalse(self.controller.available)
         self.assertEqual(self.controller.status, "Up to date.")
 
+    def test_default_signers_file_survives_without_environment_variable(self):
+        home = Path(self.signers_dir.name) / "home"
+        default_signers = (
+            home / ".config" / "self-care-tasks" / "allowed_signers"
+        )
+        default_signers.parent.mkdir(parents=True)
+        default_signers.write_text("trusted signer\n", encoding="utf-8")
+        self.controller.DEFAULT_ALLOWED_SIGNERS = default_signers
+
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(
+                self.controller._allowed_signers_file(),
+                default_signers.resolve(),
+            )
+
+    def test_configured_signers_file_takes_precedence_over_default(self):
+        self.assertEqual(
+            self.controller._allowed_signers_file(),
+            self.signers_file.resolve(),
+        )
+
+    def test_invalid_configured_signers_file_does_not_fall_back(self):
+        self.controller.DEFAULT_ALLOWED_SIGNERS = self.signers_file
+
+        with patch.dict(
+            os.environ,
+            {"SELF_CARE_UPDATE_ALLOWED_SIGNERS": str(self.signers_file) + ".missing"},
+        ):
+            self.assertIsNone(self.controller._allowed_signers_file())
+
     def test_apply_refuses_dirty_tracked_files(self):
         self.controller._run_git = Mock(
             return_value=command(stdout=" M main.py\n")

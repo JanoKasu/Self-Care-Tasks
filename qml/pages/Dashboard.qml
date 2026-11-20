@@ -190,21 +190,30 @@ Item {
             }
         }
 
-        ScrollView {
+        Flickable {
             id: taskScrollView
+            objectName: "taskScrollView"
 
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             clip: true
+            interactive: true
+            flickableDirection: Flickable.VerticalFlick
+            boundsBehavior: Flickable.StopAtBounds
+            contentWidth: width
+            contentHeight: taskGrid.implicitHeight
 
-            ScrollBar.vertical.policy: ScrollBar.AsNeeded
-            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+            ScrollBar.vertical: ScrollBar {
+                policy: taskScrollView.contentHeight > taskScrollView.height
+                        ? ScrollBar.AlwaysOn
+                        : ScrollBar.AsNeeded
+            }
 
             GridLayout {
                 id: taskGrid
                 objectName: "taskGrid"
-                width: taskScrollView.availableWidth
+                width: taskScrollView.width
 
                 columns: width < 560 ? 1 : 2
                 rowSpacing: 14

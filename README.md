@@ -159,13 +159,18 @@ the checkout or install packages.
 
 ## Update
 
-Automatic updates are fail-closed. Configure
-`SELF_CARE_UPDATE_ALLOWED_SIGNERS` to point to a Git SSH allowed-signers file
-stored outside this checkout, for example:
+Automatic updates are fail-closed. Store the Git SSH allowed-signers file
+outside this checkout at the default persistent path
+`~/.config/self-care-tasks/allowed_signers`, for example:
 
 ```text
 release-signer@example.com ssh-ed25519 AAAAC3... release signing key
 ```
+
+This path is loaded directly on every launch, including after a reboot. To keep
+the file elsewhere, set `SELF_CARE_UPDATE_ALLOWED_SIGNERS` explicitly in the
+autostart desktop entry's `Exec=` command. A variable exported only from an
+interactive shell is not inherited by all autostart mechanisms.
 
 The principal must match the committer identity on the signed release commit.
 Keep the allowed-signers file under the application user's private home

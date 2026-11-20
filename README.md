@@ -40,31 +40,6 @@ requests display power-off through X11 DPMS. Touch, mouse, or keyboard input
 restores the display; DPMS power saving requires `xset` and a compatible
 display session.
 
-## GitHub contributions
-
-The GitHub page shows a rolling year of public contribution activity. It
-refreshes on startup and every 15 minutes, and can also be refreshed manually.
-Open GitHub in the dashboard, tap Connect, scan the QR code on your phone,
-and enter the displayed code at GitHub. Sign in with your own GitHub account.
-The token is saved in the desktop's system keyring, not in the database. The
-Raspberry Pi desktop needs an unlocked Secret Service keyring (for example
-GNOME Keyring) to persist it.
-
-The project provides a public OAuth client ID, so no app registration is
-necessary. To use your own [OAuth app](https://github.com/settings/applications/new)
-instead, enable **Device Flow** and set `SELF_CARE_GITHUB_CLIENT_ID` before
-starting the dashboard. The dashboard requests no OAuth scopes and does not
-need a client secret. Expiring tokens are refreshed automatically and stored
-together in the keyring; if the refresh token expires or is revoked, disconnect
-and sign in again.
-
-The page refuses previously granted extra OAuth scopes. If a user has enabled
-private contribution counts on their GitHub profile, the calendar includes the
-same anonymized aggregate counts, but no private repository names or details
-are requested. Disconnect removes the local keyring token; revoke the OAuth
-app in GitHub's authorized applications settings as well if you want to
-invalidate the token remotely.
-
 All long pages and the navigation rail support touch swiping and visible
 scrollbars when their content exceeds the available display. Controls use
 large touch targets and switch to compact spacing on smaller Raspberry Pi
@@ -78,8 +53,7 @@ sudo apt update
 sudo apt install -y python3-venv python3-pip \
   fonts-noto-color-emoji \
   libegl1 libgl1 libgbm1 libxkbcommon0 libxcb-cursor0 \
-  libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils network-manager \
-  gnome-keyring
+  libxcb-xinerama0 libnss3 libasound2 x11-xserver-utils network-manager
 
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip

@@ -285,52 +285,6 @@ ApplicationWindow {
                     }
                 }
 
-                TabButton {
-                    id: githubTab
-                    objectName: "githubTab"
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 54
-                    checked: navigation.currentIndex === 5
-                    hoverEnabled: true
-                    Accessible.name: "GitHub"
-                    ToolTip.text: "GitHub"
-                    ToolTip.visible: hovered
-                    onClicked: navigation.currentIndex = 5
-
-                    background: Rectangle {
-                        anchors.fill: parent
-                        radius: 14
-                        color: githubTab.checked
-                               ? AppTheme.Theme.accent
-                               : "transparent"
-                        Behavior on color { ColorAnimation { duration: 180 } }
-                    }
-
-                    contentItem: Column {
-                        spacing: 1
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "\u2318"
-                            color: githubTab.checked
-                                   ? AppTheme.Theme.surface
-                                   : AppTheme.Theme.textMuted
-                            font.pixelSize: 26
-                            font.weight: Font.DemiBold
-                        }
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "GitHub"
-                            color: githubTab.checked
-                                   ? AppTheme.Theme.surface
-                                   : AppTheme.Theme.textMuted
-                            font.pixelSize: 10
-                            font.weight: Font.DemiBold
-                        }
-                    }
-                }
-
                 Item { Layout.fillHeight: true }
 
                 TabButton {
@@ -405,7 +359,6 @@ ApplicationWindow {
             History {}
             Attention {}
             Weather {}
-            GitHub {}
         }
     }
 
